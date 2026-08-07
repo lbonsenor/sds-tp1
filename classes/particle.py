@@ -16,3 +16,8 @@ class Particle:
     def __hash__(self):
         # Generate the hash value using the same identifying attributes
         return hash((self.x, self.y))
+
+    def collides_with(self, other):
+        # Distance formula: sqrt((x1 - x2)^2 + (y1 - y2)^2)
+        dist = math.hypot(self.x - other.x, self.y - other.y)
+        return dist < (self.r + other.r)
