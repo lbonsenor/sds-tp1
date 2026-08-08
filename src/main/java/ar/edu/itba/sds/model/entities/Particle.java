@@ -9,21 +9,42 @@ public class Particle implements Entity2D<Particle> {
     private float y;
 
     @Override
-    public float euclidean_distance_squared(Particle other) {
+    public float euclideanDistanceSquared(Particle other) {
         return (
                 (this.x-other.x)*(this.x-other.x) +
-                (this.y-other.y)*(this.y-other.y)
+                        (this.y-other.y)*(this.y-other.y)
         );
     }
 
     @Override
-    public boolean collides_with(Particle other) {
+    public boolean collidesWith(Particle other) {
         return this.equals(other);
     }
 
     @Override
-    public boolean is_in(float x, float y) {
-        return Float.compare(x, this.x) == 0 && Float.compare(y, this.y) == 0;
+    public boolean existsIn(float minX, float minY, float maxX, float maxY) {
+        return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    }
+
+
+    @Override
+    public float getMinX() {
+        return x;
+    }
+
+    @Override
+    public float getMaxX() {
+        return x;
+    }
+
+    @Override
+    public float getMinY() {
+        return y;
+    }
+
+    @Override
+    public float getMaxY() {
+        return y;
     }
 
     @Override
