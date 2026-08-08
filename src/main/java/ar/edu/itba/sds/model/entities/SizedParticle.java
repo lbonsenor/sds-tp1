@@ -1,11 +1,22 @@
 package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
+import jakarta.validation.constraints.Positive;
 
 public class SizedParticle implements Entity2D<SizedParticle> {
-    private float x;
-    private float y;
-    private float r;
+    @Positive
+    private final float x;
+    @Positive
+    private final float y;
+    @Positive
+    private final float r;
+
+    public SizedParticle(float x, float y, float r) {
+        if (x-r < 0 || y-r < 0) throw new IllegalArgumentException();
+        this.x = x;
+        this.y = y;
+        this.r = r;
+    }
 
     @Override
     public float euclideanDistanceSquared(SizedParticle other) {

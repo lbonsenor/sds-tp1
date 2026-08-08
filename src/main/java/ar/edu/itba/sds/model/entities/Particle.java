@@ -1,12 +1,20 @@
 package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 public class Particle implements Entity2D<Particle> {
-    private float x;
-    private float y;
+    private final float x;
+    private final float y;
+
+
+    public Particle(float x, float y) {
+        if (x < 0 || y < 0) throw new IllegalArgumentException();
+        this.x = x;
+        this.y = y;
+    }
 
     @Override
     public float euclideanDistanceSquared(Particle other) {

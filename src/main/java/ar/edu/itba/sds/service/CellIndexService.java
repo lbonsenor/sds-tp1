@@ -1,8 +1,10 @@
-package ar.edu.itba.sds.model;
+package ar.edu.itba.sds.service;
+
+import ar.edu.itba.sds.model.Entity2D;
 
 import java.util.*;
 
-public class Grid<P extends Entity2D> {
+public class CellIndexService<P extends Entity2D<P>> {
     public final int m;         // Size of the mxm matrix
     public final int l;         // Longitude
     public final int rc;        // Max neighbor distance
@@ -13,19 +15,21 @@ public class Grid<P extends Entity2D> {
     public final Map<Long, List<P>> particlesInCells = new HashMap<>();
     public final Map<P, List<P>> neighbors = new HashMap<>();
 
-    public Grid(int m, int l, int rc, Collection<P> particles) {
+    public CellIndexService(int m, int l, int rc, Collection<P> particles) {
         this.m = m;
         this.l = l;
         this.rc = rc;
 
         this.cellSize = (float) l / m;
 
+        if (m < 1 || cellSize < rc || l <= 0) throw new IllegalArgumentException();
+
         for (P particle : particles) {
-            process_particle(particle);
+            processParticle(particle);
         }
     }
 
-    public void process_particle(P particle) {
+    public void processParticle(P particle) {
         List<Long> occupiedCells = new ArrayList<>();
 
         // 1. Convert bounding box bounds directly to cell indices [0, m-1]
@@ -63,9 +67,9 @@ public class Grid<P extends Entity2D> {
         for (Long cell : occupiedCells) {
             cellsToCheck.add(cell);
             top(cell).ifPresent(c -> cellsToCheck.add((long) c));
-            top_right(cell).ifPresent(c -> cellsToCheck.add((long) c));
+            topRight(cell).ifPresent(c -> cellsToCheck.add((long) c));
             right(cell).ifPresent(c -> cellsToCheck.add((long) c));
-            bottom_right(cell).ifPresent(c -> cellsToCheck.add((long) c));
+            bottomRight(cell).ifPresent(c -> cellsToCheck.add((long) c));
         }
 
         return cellsToCheck;
@@ -87,7 +91,7 @@ public class Grid<P extends Entity2D> {
                 : Optional.empty();
     }
 
-    private Optional<Integer> top_right(long cell) {
+    private Optional<Integer> topRight(long cell) {
         long r = (cell - 1) / m;
         long col = (cell - 1) % m;
 
@@ -96,7 +100,7 @@ public class Grid<P extends Entity2D> {
                 : Optional.empty();
     }
 
-    private Optional<Integer> bottom_right(long cell) {
+    private Optional<Integer> bottomRight(long cell) {
         long r = (cell - 1) / m;
         long col = (cell - 1) % m;
 
