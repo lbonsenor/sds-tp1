@@ -1,7 +1,6 @@
 package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
-import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 

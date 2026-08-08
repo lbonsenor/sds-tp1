@@ -1,14 +1,10 @@
 package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
-import jakarta.validation.constraints.Positive;
 
 public class SizedParticle implements Entity2D<SizedParticle> {
-    @Positive
     private final float x;
-    @Positive
     private final float y;
-    @Positive
     private final float r;
 
     public SizedParticle(float x, float y, float r) {

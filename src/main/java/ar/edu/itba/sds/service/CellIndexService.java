@@ -52,7 +52,7 @@ public class CellIndexService<P extends Entity2D<P>> {
                     long cellId = (long) row * m + col + 1;
                     occupiedCells.add(cellId);
 
-                    particlesInCells.computeIfAbsent(cellId, k -> new ArrayList<>()).add(particle);
+                    particlesInCells.computeIfAbsent(cellId, _ -> new ArrayList<>()).add(particle);
                 }
             }
         }
