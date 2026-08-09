@@ -15,13 +15,14 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     }
 
     @Override
-    public float euclideanDistanceSquared(SizedParticle other) {
-        return 0;
+    public float euclideanDistance(SizedParticle other) {
+        return (float) ( Math.sqrt((this.x-other.x)*(this.x-other.x) +
+                        (this.y-other.y)*(this.y-other.y))) - this.r - other.r;
     }
 
     @Override
     public boolean collidesWith(SizedParticle other) {
-        return false;
+        return euclideanDistance(other) <= 0;
     }
 
     @Override

@@ -16,11 +16,9 @@ public class Particle implements Entity2D<Particle> {
     }
 
     @Override
-    public float euclideanDistanceSquared(Particle other) {
-        return (
-                (this.x-other.x)*(this.x-other.x) +
-                        (this.y-other.y)*(this.y-other.y)
-        );
+    public float euclideanDistance(Particle other) {
+        return (float) Math.sqrt((this.x-other.x)*(this.x-other.x) +
+                        (this.y-other.y)*(this.y-other.y));
     }
 
     @Override
