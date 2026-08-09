@@ -1,17 +1,79 @@
 package ar.edu.itba.sds;
 
+import ar.edu.itba.sds.model.ArgsParser;
+import ar.edu.itba.sds.model.Entity2D;
+import ar.edu.itba.sds.model.entities.SizedParticle;
+import ar.edu.itba.sds.service.CellIndexService2;
+
+import java.util.HashSet;
+import java.util.Set;
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    static void main() {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        IO.println(String.format("Hello and welcome!"));
+    static void main(String[] args) {
+        ArgsParser parser = new ArgsParser(args);
+        final int m  = parser.getM();         // Size of the mxm matrix
+        final int l = parser.getL();         // Longitude
+        final float rc = parser.getRc();        // Max neighbor distance
+        final float riMin = parser.getRiMin();
+        final float riMax = parser.getRiMax();
+        final int n = parser.getN();
+        final Set<SizedParticle> particles = new HashSet<>();
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            IO.println("i = " + i);
+
+        // Create particles
+        for (int i = 0; i < n; i++) {
+
+            float r = (float) (riMin + Math.random() * (riMax - riMin));
+            float x = Math.clamp((float) (Math.random() * l), r, l - r);
+            float y = Math.clamp((float) (Math.random() * l), r, l - r);
+            SizedParticle p = new SizedParticle(
+                    x,
+                    y,
+                    r
+            );
+            // check if inside table
+            if(!p.existsIn(0,0,l,l)) {
+                i--;
+                continue;
+            }
+            //check if new p collides with existing particles.
+            if(!collidesWithOthers(p, particles)){
+                particles.add(p);
+            }
+            else {
+                i--;
+            }
         }
+
+        System.out.println("N particles: " +particles.size());
+        System.out.println("Grid size: " + l + " x " + l);
+        System.out.println("m: " + m);
+        System.out.println("r: " + rc);
+
+        final CellIndexService2<SizedParticle> serv = new CellIndexService2<>(m,l,rc,particles);
+        for (SizedParticle p : particles) {
+            serv.calculateNeighbors(p);
+        }
+
+
+
+        for (SizedParticle p : particles) {
+            System.out.println("Particle: " + p);
+            System.out.println("Neighbors: " + p.getNeighbors());
+        }
+    }
+
+
+    private static boolean collidesWithOthers(SizedParticle newParticle, Set<SizedParticle> particles) {
+        boolean collides = false;
+        for (SizedParticle other :particles ) {
+            if (newParticle.collidesWith(other)) {
+                collides = true;
+                break;
+            }
+        }
+        return collides;
     }
 }

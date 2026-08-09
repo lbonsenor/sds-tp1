@@ -2,10 +2,16 @@ package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class SizedParticle implements Entity2D<SizedParticle> {
     private final float x;
     private final float y;
     private final float r;
+
+    private final Set<SizedParticle> neighbors = new HashSet<>();
+    private final Set<Cell<SizedParticle>> cells = new HashSet<>();
 
     public SizedParticle(float x, float y, float r) {
         if (x-r < 0 || y-r < 0) throw new IllegalArgumentException();
@@ -56,5 +62,24 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     @Override
     public float getMaxY() {
         return y+r;
+    }
+
+    @Override
+    public Set<SizedParticle> getNeighbors() {
+        return neighbors;
+    }
+
+    @Override
+    public Set<Cell<SizedParticle>> getCells() {
+        return cells;
+    }
+
+    @Override
+    public String toString() {
+        return "SizedParticle{" +
+                "x=" + x +
+                ", y=" + y +
+                ", r=" + r +
+                '}';
     }
 }

@@ -2,11 +2,16 @@ package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class Particle implements Entity2D<Particle> {
     private final float x;
     private final float y;
+
+    private final Set<Particle> neighbors = new HashSet<>();
+    private final Set<Cell<Particle>> cells = new HashSet<>();
 
 
     public Particle(float x, float y) {
@@ -53,6 +58,16 @@ public class Particle implements Entity2D<Particle> {
     }
 
     @Override
+    public Set<Particle> getNeighbors() {
+        return neighbors;
+    }
+
+    @Override
+    public Set<Cell<Particle>> getCells() {
+        return cells;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Particle particle = (Particle) o;
@@ -62,5 +77,15 @@ public class Particle implements Entity2D<Particle> {
     @Override
     public int hashCode() {
         return Objects.hash(x, y);
+    }
+
+
+
+    @Override
+    public String toString() {
+        return "Particle{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
     }
 }
