@@ -8,7 +8,7 @@ public class RandomParticleGenerator {
 
     private static final int MAX_ATTEMPTS_PER_PARTICLE = 10_000;
 
-    public static Set<SizedParticle> generate(int n, float l, float rMin, float rMax) {
+    public static Set<SizedParticle> generate(int n, float l, float rMin, float rMax, int seed) {
         Set<SizedParticle> particles = new HashSet<>();
 
         // Cell size >= 2 * rMax guarantees checking only the 3x3 neighboring cells is sufficient
@@ -23,7 +23,7 @@ public class RandomParticleGenerator {
             }
         }
 
-        Random random = new Random();
+        Random random = new Random(seed);
 
         for (int i = 0; i < n; i++) {
             boolean placed = false;
