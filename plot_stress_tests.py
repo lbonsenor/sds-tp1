@@ -1,5 +1,6 @@
 import os
 import glob
+import re
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -9,66 +10,57 @@ sns.set_theme(style="whitegrid", palette="deep")
 
 # Ensure output directory exists
 output_dir = "figures"
+telemetry_dir = "telemetry"
 os.makedirs(output_dir, exist_ok=True)
 
-# Define file paths
-data_files = {
-    "m_N100": "telemetry/variation_m_N100.csv",
-    "m_N300": "telemetry/variation_m_N300.csv",
-    "n_free": "telemetry/variation_n_free_density.csv",
-    "n_fixed": "telemetry/variation_n_fixed_density.csv",
-}
+# Find all CSV files in the telemetry directory
+csv_files = glob.glob(os.path.join(telemetry_dir, "variation_*.csv"))
 
-# Load datasets into a dictionary
-dfs = {}
-for key, path in data_files.items():
-    if os.path.exists(path):
-        dfs[key] = pd.read_csv(path)
+if not csv_files:
+    print(f"No CSV files found in {telemetry_dir}/")
+
+for path in sorted(csv_files):
+    # Extract filename without extension (e.g., 'variation_m_N10000')
+    filename = os.path.splitext(os.path.basename(path))[0]
+    df = pd.read_csv(path)
+
+    # Dynamic parsing for Title and X-axis column
+    m_match = re.search(r"variation_m_N(\d+)", filename, re.IGNORECASE)
+
+    if m_match:
+        # Matches files like variation_m_N100, variation_m_N10000, etc.
+        n_val = m_match.group(1)
+        x_col = "M"
+        title = f"Execution Time vs M (N={n_val})"
+    elif filename.startswith("variation_n_"):
+        # Matches files like variation_n_free_density, variation_n_fixed_density, etc.
+        density_label = filename.replace("variation_n_", "").replace("_", " ").title()
+        x_col = "N"
+        title = f"Execution Time vs N ({density_label})"
     else:
-        print(f"Warning: File {path} not found.")
+        # Fallback for unrecognized patterns
+        x_col = "M" if "M" in df.columns else "N"
+        title = filename.replace("_", " ").title()
 
-# 1. Individual Plot: Variation M (N=100)
-if "m_N100" in dfs:
+    # Generate Plot
     plt.figure(figsize=(7, 5))
-    sns.lineplot(data=dfs["m_N100"], x="M", y="execution_time_ms", marker="o", color="blue", errorbar=None)
-    plt.title("Execution Time vs M (N=100)", fontsize=12, fontweight="bold")
-    plt.xlabel("M")
+    sns.lineplot(
+        data=df,
+        x=x_col,
+        y="execution_time_ms",
+        marker="o",
+        errorbar=None
+    )
+    plt.title(title, fontsize=12, fontweight="bold")
+    plt.xlabel(x_col)
     plt.ylabel("Execution Time (ms)")
     plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "variation_m_N100.png"), dpi=300)
+
+    # Save output plot using the exact original filename base
+    save_path = os.path.join(output_dir, f"{filename}.png")
+    plt.savefig(save_path, dpi=300)
     plt.close()
 
-# 2. Individual Plot: Variation M (N=300)
-if "m_N300" in dfs:
-    plt.figure(figsize=(7, 5))
-    sns.lineplot(data=dfs["m_N300"], x="M", y="execution_time_ms", marker="o", color="orange", errorbar=None)
-    plt.title("Execution Time vs M (N=300)", fontsize=12, fontweight="bold")
-    plt.xlabel("M")
-    plt.ylabel("Execution Time (ms)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "variation_m_N300.png"), dpi=300)
-    plt.close()
-
-# 3. Individual Plot: Variation N (Free Density)
-if "n_free" in dfs:
-    plt.figure(figsize=(7, 5))
-    sns.lineplot(data=dfs["n_free"], x="N", y="execution_time_ms", marker="o", color="green", errorbar=None)
-    plt.title("Execution Time vs N (Free Density)", fontsize=12, fontweight="bold")
-    plt.xlabel("N")
-    plt.ylabel("Execution Time (ms)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "variation_n_free_density.png"), dpi=300)
-    plt.close()
-
-# 4. Individual Plot: Variation N (Fixed Density)
-if "n_fixed" in dfs:
-    plt.figure(figsize=(7, 5))
-    sns.lineplot(data=dfs["n_fixed"], x="N", y="execution_time_ms", marker="o", color="purple", errorbar=None)
-    plt.title("Execution Time vs N (Fixed Density)", fontsize=12, fontweight="bold")
-    plt.xlabel("N")
-    plt.ylabel("Execution Time (ms)")
-    plt.tight_layout()
-    plt.savefig(os.path.join(output_dir, "variation_n_fixed_density.png"), dpi=300)
-    plt.close()
+    print(f"Saved figure: {save_path}")
 
 print("All figures successfully saved in figures/")

@@ -1,111 +1,111 @@
 package ar.edu.itba.sds.service;
 
-import ar.edu.itba.sds.model.Entity2D;
+import ar.edu.itba.sds.model.entities.SizedParticle;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-public class CellIndexService<P extends Entity2D<P>> {
-    public final int m;         // Size of the mxm matrix
-    public final int l;         // Longitude
-    public final int rc;        // Max neighbor distance
+public class CellIndexService<T extends SizedParticle> {
 
-    public final float cellSize;
+    private final int M;
+    private final float L;
+    private final float rc;
+    private final List<T>[][] grid;
 
-    public final Map<P, List<Long>> cellsWithParticle = new HashMap<>();
-    public final Map<Long, List<P>> particlesInCells = new HashMap<>();
-    public final Map<P, List<P>> neighbors = new HashMap<>();
+    // Neighbor offsets for 2D symmetric Cell Index Method:
+    // Right (1,0), Top-Right (1,1), Top (0,1), Top-Left (-1,1)
+    private static final int[][] NEIGHBOR_OFFSETS = {
+            {1, 0},
+            {1, 1},
+            {0, 1},
+            {-1, 1}
+    };
 
-    public CellIndexService(int m, int l, int rc, Collection<P> particles) {
-        this.m = m;
-        this.l = l;
+    @SuppressWarnings("unchecked")
+    public CellIndexService(int M, float L, float rc, Collection<T> particles) {
+        this.M = M;
+        this.L = L;
         this.rc = rc;
+        float cellSize = L / M;
+        this.grid = new ArrayList[M][M];
 
-        this.cellSize = (float) l / m;
-
-        if (m < 1 || cellSize < rc || l <= 0) throw new IllegalArgumentException();
-
-        for (P particle : particles) {
-            processParticle(particle);
-        }
-    }
-
-    public void processParticle(P particle) {
-        List<Long> occupiedCells = new ArrayList<>();
-
-        // 1. Convert bounding box bounds directly to cell indices [0, m-1]
-        int minCol = (int) (particle.getMinX() / cellSize);
-        int maxCol = Math.min(m - 1, (int) (particle.getMaxX() / cellSize)); // Handles boundary x == L
-
-        int minRow = (int) (particle.getMinY() / cellSize);
-        int maxRow = Math.min(m - 1, (int) (particle.getMaxY() / cellSize)); // Handles boundary y == L
-
-        // 2. Iterate only over the candidate cell range
-        for (int row = minRow; row <= maxRow; row++) {
-            float cellMinY = row * cellSize;
-            float cellMaxY = (row + 1) * cellSize;
-
-            for (int col = minCol; col <= maxCol; col++) {
-                float cellMinX = col * cellSize;
-                float cellMaxX = (col + 1) * cellSize;
-
-                if (particle.existsIn(cellMinX, cellMinY, cellMaxX, cellMaxY)) {
-                    long cellId = (long) row * m + col + 1;
-                    occupiedCells.add(cellId);
-
-                    particlesInCells.computeIfAbsent(cellId, _ -> new ArrayList<>()).add(particle);
-                }
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < M; j++) {
+                grid[i][j] = new ArrayList<>();
             }
         }
 
-        cellsWithParticle.put(particle, occupiedCells);
-    }
+        // Assign particles to cells
+        for (T particle : particles) {
+            float x = (particle.getMaxX() + particle.getMinX()) * 0.5f;
+            float y = (particle.getMaxY() + particle.getMinY()) * 0.5f;
 
-    public Set<Long> getCellsToCheck(P particle) {
-        Set<Long> cellsToCheck = new HashSet<>();
-        List<Long> occupiedCells = cellsWithParticle.getOrDefault(particle, Collections.emptyList());
-
-        for (Long cell : occupiedCells) {
-            cellsToCheck.add(cell);
-            top(cell).ifPresent(c -> cellsToCheck.add((long) c));
-            topRight(cell).ifPresent(c -> cellsToCheck.add((long) c));
-            right(cell).ifPresent(c -> cellsToCheck.add((long) c));
-            bottomRight(cell).ifPresent(c -> cellsToCheck.add((long) c));
+            int cellX = Math.min((int) (x / cellSize), M - 1);
+            int cellY = Math.min((int) (y / cellSize), M - 1);
+            grid[cellX][cellY].add(particle);
         }
-
-        return cellsToCheck;
     }
 
-    private Optional<Integer> top(long cell) {
-        long r = (cell - 1) / m;
+    /**
+     * Executes Symmetric Cell Index Method.
+     */
+    public void calculateNeighbors(boolean contour) {
+        for (int x = 0; x < M; x++) {
+            for (int y = 0; y < M; y++) {
+                List<T> currentCell = grid[x][y];
+                int currentCellSize = currentCell.size();
 
-        return (r < m - 1)
-                ? Optional.of((int) (cell + m))
-                : Optional.empty();
+                if (currentCellSize == 0) {
+                    continue;
+                }
+
+                // 1. Intra-cell comparisons (within the same cell)
+                for (int i = 0; i < currentCellSize; i++) {
+                    T p1 = currentCell.get(i);
+                    for (int j = i + 1; j < currentCellSize; j++) {
+                        T p2 = currentCell.get(j);
+                        checkAndAddNeighbor(p1, p2, contour);
+                    }
+                }
+
+                // 2. Inter-cell comparisons (Symmetric adjacent cells)
+                for (int[] offset : NEIGHBOR_OFFSETS) {
+                    int nx = x + offset[0];
+                    int ny = y + offset[1];
+
+                    if (contour) {
+                        nx = (nx + M) % M;
+                        ny = (ny + M) % M;
+                    } else if (nx < 0 || nx >= M || ny < 0 || ny >= M) {
+                        continue;
+                    }
+
+                    List<T> neighborCell = grid[nx][ny];
+
+                    for (int i = 0; i < currentCellSize; i++) {
+                        T p1 = currentCell.get(i);
+                        for (T p2 : neighborCell) {
+                            checkAndAddNeighbor(p1, p2, contour);
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private Optional<Integer> right(long cell) {
-        long col = (cell - 1) % m;
+    private void checkAndAddNeighbor(T p1, T p2, boolean contour) {
+        float centerToCenterDistance = p1.euclideanDistance(p2, contour, (int) L);
 
-        return (col < m - 1)
-                ? Optional.of((int) (cell + 1))
-                : Optional.empty();
-    }
+        // Pre-calculated or direct radius access avoids repeated bounds math
+        float r1 = (p1.getMaxX() - p1.getMinX()) * 0.5f;
+        float r2 = (p2.getMaxX() - p2.getMinX()) * 0.5f;
 
-    private Optional<Integer> topRight(long cell) {
-        long r = (cell - 1) / m;
-        long col = (cell - 1) % m;
+        float surfaceDistance = centerToCenterDistance - r1 - r2;
 
-        return (r < m - 1 && col < m - 1)
-                ? Optional.of((int) (cell + m + 1))
-                : Optional.empty();
-    }
-
-    private Optional<Integer> bottomRight(long cell) {
-        long r = (cell - 1) / m;
-        long col = (cell - 1) % m;
-
-        return (r > 0 && col < m - 1)
-                ? Optional.of((int) (cell - m + 1))
-                : Optional.empty();
+        if (surfaceDistance <= rc) {
+            p1.getNeighbors().add(p2);
+            p2.getNeighbors().add(p1);
+        }
     }
 }

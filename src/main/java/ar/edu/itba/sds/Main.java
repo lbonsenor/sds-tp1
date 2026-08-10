@@ -2,7 +2,7 @@ package ar.edu.itba.sds;
 
 import ar.edu.itba.sds.utils.ArgsParser;
 import ar.edu.itba.sds.model.entities.SizedParticle;
-import ar.edu.itba.sds.service.CellIndexService2;
+import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.utils.CsvExporter;
 import ar.edu.itba.sds.utils.RandomParticleGenerator;
 
@@ -32,12 +32,10 @@ public class Main {
         System.out.println("r: " + rc);
 
         // 2. Compute neighbors
-        final CellIndexService2<SizedParticle> service = new CellIndexService2<>(m, l, rc, particles);
+        final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
 
         Instant start = Instant.now();
-        for (SizedParticle p : particles) {
-            service.calculateNeighbors(p, contour);
-        }
+        service.calculateNeighbors(contour);
         Instant end = Instant.now();
 
         long executionTimeMs = Duration.between(start, end).toMillis();

@@ -1,12 +1,13 @@
 package ar.edu.itba.sds;
 
 import ar.edu.itba.sds.model.entities.SizedParticle;
-import ar.edu.itba.sds.service.CellIndexService2;
+import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.utils.CsvExporter;
 import ar.edu.itba.sds.utils.RandomParticleGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Set;
 
 public class StressTest {
@@ -15,9 +16,8 @@ public class StressTest {
     private static final float RI_MAX = 0.26f;
     private static final float RC = 1.0f;
 
-    // Increased iterations to give JIT stable measurement conditions
-    private static final int WARMUP_ITERATIONS = 50;
-    private static final int BENCHMARK_ITERATIONS = 100;
+    private static final int GLOBAL_WARMUP_RUNS = 1000;
+    private static final int BENCHMARK_ITERATIONS = 200;
 
     /**
      * Section 3: Variation of M
@@ -26,26 +26,27 @@ public class StressTest {
     @DisplayName("Stress Test: Variation of M (Section 3)")
     void testVariationOfM() {
         int l = 20;
-        int[] nValues = {100, 300}; // Intermediate and High N
+        int[] nValues = {1000, 1100};
         boolean contour = false;
 
-        // Condition: L / M > rc + 2*r_max
         double maxCellSizeLimit = RC + 2 * RI_MAX;
         int maxM = (int) Math.floor(l / maxCellSizeLimit);
 
         for (int n : nValues) {
             Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
 
+            // Force JIT compilation before benchmarking this particle set
+            globalJitWarmup(l, particles, contour);
+
             for (int m = 1; m <= maxM; m++) {
-                CellIndexService2<SizedParticle> service = new CellIndexService2<>(m, l, RC, particles);
+                CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
 
-                // High-precision timing in fractional milliseconds (e.g. 2.43 ms)
-                double avgTimeMs = runBenchmark(service, particles, contour);
+                double medianTimeMs = runBenchmark(service, particles, contour);
 
-                // Export to telemetry/variation_m_N{N}.csv
-                CsvExporter.exportVariationMTelemetry(n, m, avgTimeMs);
+                CsvExporter.exportVariationMTelemetry(n, m, medianTimeMs);
 
-                System.out.printf("[Variation M] N: %d | M: %2d/%d | Avg Time: %.4f ms%n", n, m, maxM, avgTimeMs);
+                System.out.printf("[Variation M] N: %d | M: %2d/%d | Median Time: %.4f ms%n",
+                        n, m, maxM, medianTimeMs);
             }
         }
     }
@@ -64,13 +65,17 @@ public class StressTest {
 
         for (int n : nValues) {
             Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
-            CellIndexService2<SizedParticle> service = new CellIndexService2<>(optimalM, l, RC, particles);
 
-            double avgTimeMs = runBenchmark(service, particles, contour);
+            globalJitWarmup(l, particles, contour);
 
-            CsvExporter.exportVariationNFreeDensityTelemetry(n, avgTimeMs);
+            CellIndexService<SizedParticle> service = new CellIndexService<>(optimalM, l, RC, particles);
 
-            System.out.printf("[Variation N - Free Density] N: %d | M: %d | Avg Time: %.4f ms%n", n, optimalM, avgTimeMs);
+            double medianTimeMs = runBenchmark(service, particles, contour);
+
+            CsvExporter.exportVariationNFreeDensityTelemetry(n, medianTimeMs);
+
+            System.out.printf("[Variation N - Free Density] N: %d | M: %d | Median Time: %.4f ms%n",
+                    n, optimalM, medianTimeMs);
         }
     }
 
@@ -90,60 +95,57 @@ public class StressTest {
             int m = (int) Math.floor(l / (RC + 2 * RI_MAX));
 
             Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
-            CellIndexService2<SizedParticle> service = new CellIndexService2<>(m, l, RC, particles);
 
-            double avgTimeMs = runBenchmark(service, particles, contour);
+            globalJitWarmup(l, particles, contour);
 
-            CsvExporter.exportVariationNFixedDensityTelemetry(n, l, m, actualDensity, avgTimeMs);
+            CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
 
-            System.out.printf("[Variation N - Fixed Density] N: %d | L: %d | M: %d | Density: %.4f | Avg Time: %.4f ms%n",
-                    n, l, m, actualDensity, avgTimeMs);
+            double medianTimeMs = runBenchmark(service, particles, contour);
+
+            CsvExporter.exportVariationNFixedDensityTelemetry(n, l, m, actualDensity, medianTimeMs);
+
+            System.out.printf("[Variation N - Fixed Density] N: %d | L: %d | M: %d | Density: %.4f | Median Time: %.4f ms%n",
+                    n, l, m, actualDensity, medianTimeMs);
         }
     }
 
     /**
-     * Runs JVM warm-up using System.nanoTime() for nanosecond precision benchmarking.
-     * Returns execution time per iteration in floating-point milliseconds.
+     * Executes heavy dummy iterations before recording measurements to ensure
+     * the JVM JIT compiler fully optimizes and compiles bytecode to machine code.
      */
-    private double runBenchmark(CellIndexService2<SizedParticle> service, Set<SizedParticle> particles,
-                                boolean contour) {
-
-        // 1. Warmup phase (let JIT optimize without recording timing)
-        for (int w = 0; w < StressTest.WARMUP_ITERATIONS; w++) {
-            calculateAllNeighbors(service, particles, contour);
+    private void globalJitWarmup(float l, Set<SizedParticle> particles, boolean contour) {
+        CellIndexService<SizedParticle> warmupService = new CellIndexService<>(3, l, StressTest.RC, particles);
+        for (int i = 0; i < GLOBAL_WARMUP_RUNS; i++) {
+            for (SizedParticle p : particles) {
+                p.getNeighbors().clear();
+            }
+            warmupService.calculateNeighbors(contour);
         }
-
-        // Clear potential garbage from warmup before benchmarking
-        System.gc();
-
-        // Array to store elapsed time of each individual benchmark run (in milliseconds)
-        double[] runTimesMs = new double[StressTest.BENCHMARK_ITERATIONS];
-
-        // 2. Collect precise timing for each individual iteration
-        for (int i = 0; i < StressTest.BENCHMARK_ITERATIONS; i++) {
-            long startNano = System.nanoTime();
-
-            calculateAllNeighbors(service, particles, contour);
-
-            long elapsedNano = System.nanoTime() - startNano;
-            runTimesMs[i] = elapsedNano / 1_000_000.0; // convert to ms
-        }
-
-        // 3. Calculate Mean Execution Time
-        double sum = 0.0;
-        for (double time : runTimesMs) {
-            sum += time;
-        }
-
-        return sum / StressTest.BENCHMARK_ITERATIONS;
     }
 
-    private void calculateAllNeighbors(CellIndexService2<SizedParticle> service,
-                                       Set<SizedParticle> particles,
-                                       boolean contour) {
-        for (SizedParticle p : particles) {
-            p.getNeighbors().clear();
-            service.calculateNeighbors(p, contour);
+    /**
+     * Measures precise execution times and returns the MEDIAN runtime
+     * to eliminate garbage collection and OS context-switch noise.
+     */
+    private double runBenchmark(CellIndexService<SizedParticle> service,
+                                Set<SizedParticle> particles,
+                                boolean contour) {
+
+        double[] runTimesMs = new double[BENCHMARK_ITERATIONS];
+
+        for (int i = 0; i < BENCHMARK_ITERATIONS; i++) {
+            for (SizedParticle p : particles) {
+                p.getNeighbors().clear();
+            }
+
+            long startNano = System.nanoTime();
+            service.calculateNeighbors(contour);
+            long elapsedNano = System.nanoTime() - startNano;
+
+            runTimesMs[i] = elapsedNano / 1_000_000.0;
         }
+
+        Arrays.sort(runTimesMs);
+        return runTimesMs[BENCHMARK_ITERATIONS / 2];
     }
 }
