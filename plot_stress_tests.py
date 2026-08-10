@@ -106,63 +106,109 @@ for path in sorted(m_csv_files):
         print(f"Saved figure: {save_path}")
 
 # ====================================================================
-# 2. Process and Plot Variation of N (Free Combined & Fixed Combined)
+# 2. Process and Plot Variation of N Comparisons
 # ====================================================================
 n_comparisons = [
+    # 1. Standard Algorithm: Free vs Fixed Density
     {
-        "title_mode": "Free Density",
-        "std_file": "variation_n_free_density.csv",
-        "bf_file": "variation_n_free_density_bf.csv",
-        "output": "variation_n_free_combined.png",
-        "exclude_params": ("N",)
+        "title": "Execution Time vs N (Standard: Free vs Fixed Density)",
+        "legend_title": "Density Configuration",
+        "file1": "variation_n_free_density.csv",
+        "label1": "Free Density",
+        "fmt1": "-o",
+        "exclude1": ("N",),
+        "file2": "variation_n_fixed_density.csv",
+        "label2": "Fixed Density",
+        "fmt2": "-s",
+        "exclude2": ("N", "L", "M"),
+        "color2_idx": 1,
+        "output": "variation_n_combined.png"
     },
+    # 2. Brute Force Algorithm: Free vs Fixed Density
     {
-        "title_mode": "Fixed Density",
-        "std_file": "variation_n_fixed_density.csv",
-        "bf_file": "variation_n_fixed_density_bf.csv",
-        "output": "variation_n_fixed_combined.png",
-        "exclude_params": ("N", "L", "M")
+        "title": "Execution Time vs N (Brute Force: Free vs Fixed Density)",
+        "legend_title": "Density Configuration",
+        "file1": "variation_n_free_density_bf.csv",
+        "label1": "Free Density",
+        "fmt1": "-o",
+        "exclude1": ("N",),
+        "file2": "variation_n_fixed_density_bf.csv",
+        "label2": "Fixed Density",
+        "fmt2": "-s",
+        "exclude2": ("N", "L", "M"),
+        "color2_idx": 1,
+        "output": "variation_n_combined_bf.png"
+    },
+    # 3. Free Density: Standard vs Brute Force
+    {
+        "title": "Execution Time vs N (Free Density: Standard vs Brute Force)",
+        "legend_title": "Algorithm",
+        "file1": "variation_n_free_density.csv",
+        "label1": "Standard",
+        "fmt1": "-o",
+        "exclude1": ("N",),
+        "file2": "variation_n_free_density_bf.csv",
+        "label2": "Brute Force",
+        "fmt2": "-s",
+        "exclude2": ("N",),
+        "color2_idx": 3,
+        "output": "variation_n_free_combined.png"
+    },
+    # 4. Fixed Density: Standard vs Brute Force
+    {
+        "title": "Execution Time vs N (Fixed Density: Standard vs Brute Force)",
+        "legend_title": "Algorithm",
+        "file1": "variation_n_fixed_density.csv",
+        "label1": "Standard",
+        "fmt1": "-o",
+        "exclude1": ("N", "L", "M"),
+        "file2": "variation_n_fixed_density_bf.csv",
+        "label2": "Brute Force",
+        "fmt2": "-s",
+        "exclude2": ("N", "L", "M"),
+        "color2_idx": 3,
+        "output": "variation_n_fixed_combined.png"
     }
 ]
 
 for comp in n_comparisons:
-    std_path = os.path.join(telemetry_dir, comp["std_file"])
-    bf_path = os.path.join(telemetry_dir, comp["bf_file"])
+    path1 = os.path.join(telemetry_dir, comp["file1"])
+    path2 = os.path.join(telemetry_dir, comp["file2"])
 
-    if os.path.exists(std_path) and os.path.exists(bf_path):
-        df_std = pd.read_csv(std_path)
-        df_bf = pd.read_csv(bf_path)
+    if os.path.exists(path1) and os.path.exists(path2):
+        df1 = pd.read_csv(path1)
+        df2 = pd.read_csv(path2)
 
         plt.figure(figsize=(9, 6))
 
-        std_params = params_text(df_std, exclude=comp["exclude_params"])
-        bf_params = params_text(df_bf, exclude=comp["exclude_params"])
+        p1_text = params_text(df1, exclude=comp["exclude1"])
+        p2_text = params_text(df2, exclude=comp["exclude2"])
 
-        # Plot Standard Algorithm
+        # Curve 1
         plt.errorbar(
-            df_std["N"],
-            df_std["mean_time_ms"],
-            yerr=df_std["std_dev_ms"],
-            fmt='-o',
-            label="Standard",
+            df1["N"],
+            df1["mean_time_ms"],
+            yerr=df1["std_dev_ms"],
+            fmt=comp["fmt1"],
+            label=comp["label1"],
             capsize=5,
             capthick=1.5,
             color=sns.color_palette()[0]
         )
 
-        # Plot Brute Force Algorithm
+        # Curve 2
         plt.errorbar(
-            df_bf["N"],
-            df_bf["mean_time_ms"],
-            yerr=df_bf["std_dev_ms"],
-            fmt='-s',
-            label="Brute Force",
+            df2["N"],
+            df2["mean_time_ms"],
+            yerr=df2["std_dev_ms"],
+            fmt=comp["fmt2"],
+            label=comp["label2"],
             capsize=5,
             capthick=1.5,
-            color=sns.color_palette()[3]
+            color=sns.color_palette()[comp["color2_idx"]]
         )
 
-        plt.title(f"Execution Time vs N ({comp['title_mode']}: Standard vs Brute Force)", fontsize=14, fontweight="bold")
+        plt.title(comp["title"], fontsize=14, fontweight="bold")
         plt.xlabel("N (Number of Particles)")
         plt.ylabel("Mean Execution Time (ms)")
 
@@ -170,24 +216,24 @@ for comp in n_comparisons:
         plt.xscale("log")
         plt.yscale("log")
 
-        plt.legend(title="Algorithm Implementation", loc="upper left", fontsize=10, title_fontsize=11)
+        plt.legend(title=comp["legend_title"], loc="upper left", fontsize=10, title_fontsize=11)
 
         ax = plt.gca()
-        combined_params_text = f"Standard Params: {std_params}\nBrute Force Params: {bf_params}"
+        combined_params_text = f"{comp['label1']} Params: {p1_text}\n{comp['label2']} Params: {p2_text}"
         add_params_box(ax, combined_params_text, x=0.97, y=0.04, ha="right")
 
-        print(f"[{comp['title_mode']}] Standard params:    {std_params}")
-        print(f"[{comp['title_mode']}] Brute Force params: {bf_params}")
+        print(f"[{comp['title']}] {comp['label1']}: {p1_text}")
+        print(f"[{comp['title']}] {comp['label2']}: {p2_text}")
 
         plt.tight_layout()
-        combined_save_path = os.path.join(output_dir, comp["output"])
-        plt.savefig(combined_save_path, dpi=300)
+        save_path = os.path.join(output_dir, comp["output"])
+        plt.savefig(save_path, dpi=300)
         plt.close()
 
-        print(f"Saved figure: {combined_save_path}")
+        print(f"Saved figure: {save_path}")
     else:
         print(
-            f"Notice: Missing one or both files ({comp['std_file']}, {comp['bf_file']}) in {telemetry_dir}/. Skipping comparison."
+            f"Notice: Missing one or both files ({comp['file1']}, {comp['file2']}) in {telemetry_dir}/. Skipping plot."
         )
 
 print("All figures successfully saved in figures/")
