@@ -70,7 +70,6 @@ for path in sorted(m_csv_files):
     filename = os.path.splitext(os.path.basename(path))[0]
     df = pd.read_csv(path)
 
-    # Extract the N value from the filename
     m_match = re.search(r"variation_m_N(\d+)", filename, re.IGNORECASE)
     if m_match:
         n_val = m_match.group(1)
@@ -78,25 +77,21 @@ for path in sorted(m_csv_files):
 
         plt.figure(figsize=(8, 6))
 
-        # Plot with explicit error bars using standard deviation
         plt.errorbar(
             df["M"],
             df["mean_time_ms"],
             yerr=df["std_dev_ms"],
             fmt='-o',
-            capsize=5,  # Width of the error bar caps
-            capthick=1.5,  # Thickness of the caps
+            capsize=5,
+            capthick=1.5,
             color=sns.color_palette()[0]
         )
 
         plt.title(title, fontsize=14, fontweight="bold")
         plt.xlabel("M (Grid Divisions)")
         plt.ylabel("Mean Execution Time (ms)")
-
-        # Use log scale in case times vary by orders of magnitude (e.g., M=1 vs Optimal)
         plt.yscale("log")
 
-        # Fixed execution parameters (everything except the varying M)
         add_params_box(plt.gca(), params_text(df, exclude=("M",)))
         print(f"  [{filename}] Fixed params: {params_text(df, exclude=('M',))}")
 
@@ -108,72 +103,85 @@ for path in sorted(m_csv_files):
         print(f"Saved figure: {save_path}")
 
 # ====================================================================
-# 2. Process and Plot Variation of N (Sections 4.1 & 4.2 Superimposed)
+# 2. Process and Plot Variation of N (Free Combined & Fixed Combined)
 # ====================================================================
-free_path = os.path.join(telemetry_dir, "variation_n_free_density.csv")
-fixed_path = os.path.join(telemetry_dir, "variation_n_fixed_density.csv")
+n_comparisons = [
+    {
+        "title_mode": "Free Density",
+        "std_file": "variation_n_free_density.csv",
+        "bf_file": "variation_n_free_density_bf.csv",
+        "output": "variation_n_free_combined.png",
+        "exclude_params": ("N",)
+    },
+    {
+        "title_mode": "Fixed Density",
+        "std_file": "variation_n_fixed_density.csv",
+        "bf_file": "variation_n_fixed_density_bf.csv",
+        "output": "variation_n_fixed_combined.png",
+        "exclude_params": ("N", "L", "M")
+    }
+]
 
-if os.path.exists(free_path) and os.path.exists(fixed_path):
-    df_free = pd.read_csv(free_path)
-    df_fixed = pd.read_csv(fixed_path)
+for comp in n_comparisons:
+    std_path = os.path.join(telemetry_dir, comp["std_file"])
+    bf_path = os.path.join(telemetry_dir, comp["bf_file"])
 
-    plt.figure(figsize=(9, 6))
+    if os.path.exists(std_path) and os.path.exists(bf_path):
+        df_std = pd.read_csv(std_path)
+        df_bf = pd.read_csv(bf_path)
 
-    # Fixed params for each curve (everything except the varying N)
-    free_params = params_text(df_free, exclude=("N",))
-    fixed_params = params_text(df_fixed, exclude=("N", "L", "M"))
+        plt.figure(figsize=(9, 6))
 
-    # Plot Free Density (Section 4.1)
-    # Changed label to be short so it doesn't clutter the legend
-    plt.errorbar(
-        df_free["N"],
-        df_free["mean_time_ms"],
-        yerr=df_free["std_dev_ms"],
-        fmt='-o',
-        label="Free Density",
-        capsize=5,
-        capthick=1.5,
-        color=sns.color_palette()[0]
-    )
+        std_params = params_text(df_std, exclude=comp["exclude_params"])
+        bf_params = params_text(df_bf, exclude=comp["exclude_params"])
 
-    # Plot Fixed Density (Section 4.2)
-    # Changed label to be short so it doesn't clutter the legend
-    plt.errorbar(
-        df_fixed["N"],
-        df_fixed["mean_time_ms"],
-        yerr=df_fixed["std_dev_ms"],
-        fmt='-s',
-        label="Fixed Density",
-        capsize=5,
-        capthick=1.5,
-        color=sns.color_palette()[1]
-    )
+        # Plot Standard Algorithm
+        plt.errorbar(
+            df_std["N"],
+            df_std["mean_time_ms"],
+            yerr=df_std["std_dev_ms"],
+            fmt='-o',
+            label="Standard",
+            capsize=5,
+            capthick=1.5,
+            color=sns.color_palette()[0]
+        )
 
-    plt.title("Execution Time vs N (Free vs Fixed Density)", fontsize=14, fontweight="bold")
-    plt.xlabel("N (Number of Particles)")
-    plt.ylabel("Mean Execution Time (ms)")
-    plt.yscale("log")
+        # Plot Brute Force Algorithm
+        plt.errorbar(
+            df_bf["N"],
+            df_bf["mean_time_ms"],
+            yerr=df_bf["std_dev_ms"],
+            fmt='-s',
+            label="Brute Force",
+            capsize=5,
+            capthick=1.5,
+            color=sns.color_palette()[3]
+        )
 
-    # Add legend to distinguish the overlapping curves
-    plt.legend(title="Density Configuration", loc="upper left", fontsize=10, title_fontsize=11)
+        plt.title(f"Execution Time vs N ({comp['title_mode']}: Standard vs Brute Force)", fontsize=14, fontweight="bold")
+        plt.xlabel("N (Number of Particles)")
+        plt.ylabel("Mean Execution Time (ms)")
+        plt.yscale("log")
 
-    # Combine both parameter strings into a single text box with a newline (\n)
-    # Placed at the bottom right (x=0.97, ha="right") to avoid the data lines
-    ax = plt.gca()
-    combined_params_text = f"Free Density Params: {free_params}\nFixed Density Params: {fixed_params}"
-    add_params_box(ax, combined_params_text, x=0.97, y=0.04, ha="right")
+        plt.legend(title="Algorithm Implementation", loc="upper left", fontsize=10, title_fontsize=11)
 
-    print(f"  Free Density params:  {free_params}")
-    print(f"  Fixed Density params: {fixed_params}")
+        ax = plt.gca()
+        combined_params_text = f"Standard Params: {std_params}\nBrute Force Params: {bf_params}"
+        add_params_box(ax, combined_params_text, x=0.97, y=0.04, ha="right")
 
-    plt.tight_layout()
-    combined_save_path = os.path.join(output_dir, "variation_n_combined.png")
-    plt.savefig(combined_save_path, dpi=300)
-    plt.close()
+        print(f"[{comp['title_mode']}] Standard params:    {std_params}")
+        print(f"[{comp['title_mode']}] Brute Force params: {bf_params}")
 
-    print(f"Saved combined figure: {combined_save_path}")
-else:
-    print(
-        f"Notice: Missing one or both Variation N files in {telemetry_dir}/. Cannot plot the combined superimposed figure.")
+        plt.tight_layout()
+        combined_save_path = os.path.join(output_dir, comp["output"])
+        plt.savefig(combined_save_path, dpi=300)
+        plt.close()
+
+        print(f"Saved figure: {combined_save_path}")
+    else:
+        print(
+            f"Notice: Missing one or both files ({comp['std_file']}, {comp['bf_file']}) in {telemetry_dir}/. Skipping comparison."
+        )
 
 print("All figures successfully saved in figures/")

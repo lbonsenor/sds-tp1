@@ -156,31 +156,32 @@ public class CsvExporter {
         }
     }
 
-    public static void exportVariationNFreeDensityTelemetryBruteForce(int n, double executionTimeMs) {
+    public static void exportVariationNFreeDensityTelemetryBruteForce(int n, float l, int m, float rc, float riMin, float riMax,
+                                                            boolean contour, int warmupRuns, int benchmarkIterations,
+                                                            double meanTimeMs, double stdDevMs) {
         ensureDirectoryExists(TELEMETRY_DIR);
-        File file = new File(TELEMETRY_DIR + "/variation_n_free_density_brute_force.csv");
-        boolean fileExists = file.exists();
+        File file = new File(TELEMETRY_DIR + "/variation_n_free_density_bf.csv");
 
-        try (FileWriter writer = new FileWriter(file, true)) {
-            if (!fileExists) {
-                writer.write("N,execution_time_ms\n");
-            }
-            writer.write(String.format(Locale.US, "%d,%.4f\n", n, executionTimeMs));
+        try (FileWriter writer = openTelemetryWriter(file,
+                "N,L,M," + COMMON_FIXED_COLUMNS + ",mean_time_ms,std_dev_ms")) {
+            writer.write(String.format(Locale.US, "%d,%.0f,%d,%.2f,%.2f,%.2f,%d,%d,%d,%.4f,%.4f\n",
+                    n, l, m, rc, riMin, riMax, contour ? 1 : 0, warmupRuns, benchmarkIterations, meanTimeMs, stdDevMs));
         } catch (IOException e) {
             System.err.println("Error writing variation N free density CSV: " + e.getMessage());
         }
     }
 
-    public static void exportVariationNFixedDensityTelemetryBruteForce(int n, int l, int m, float density, double executionTimeMs) {
+    public static void exportVariationNFixedDensityTelemetryBruteForce(int n, int l, int m, float density, float rc,
+                                                             float riMin, float riMax, boolean contour,
+                                                             int warmupRuns, int benchmarkIterations,
+                                                             double meanTimeMs, double stdDevMs) {
         ensureDirectoryExists(TELEMETRY_DIR);
-        File file = new File(TELEMETRY_DIR + "/variation_n_fixed_density_brute_force.csv");
-        boolean fileExists = file.exists();
+        File file = new File(TELEMETRY_DIR + "/variation_n_fixed_density_bf.csv");
 
-        try (FileWriter writer = new FileWriter(file, true)) {
-            if (!fileExists) {
-                writer.write("N,L,M,density,execution_time_ms\n");
-            }
-            writer.write(String.format(Locale.US, "%d,%d,%d,%.4f,%.4f\n", n, l, m, density, executionTimeMs));
+        try (FileWriter writer = openTelemetryWriter(file,
+                "N,L,M,density," + COMMON_FIXED_COLUMNS + ",mean_time_ms,std_dev_ms")) {
+            writer.write(String.format(Locale.US, "%d,%d,%d,%.4f,%.2f,%.2f,%.2f,%d,%d,%d,%.4f,%.4f\n",
+                    n, l, m, density, rc, riMin, riMax, contour ? 1 : 0, warmupRuns, benchmarkIterations, meanTimeMs, stdDevMs));
         } catch (IOException e) {
             System.err.println("Error writing variation N fixed density CSV: " + e.getMessage());
         }

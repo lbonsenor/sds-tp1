@@ -134,6 +134,66 @@ public class StressTest {
     }
 
     /**
+     * Section 4.1: Variation of N with Free Density
+     */
+    @Test
+    @DisplayName("Stress Test: Variation of N - Free Density (Section 4.1)")
+    void testVariationOfNFreeDensityBruteForce() {
+        int optimalM = 1;
+        int maxN = findMaxFeasibleN(L);
+
+        int[] nValues = {10, 50, 100, 200, 300, INTERMEDIATE_N, 500, 600, 700, 800, 900, 1000, maxN};
+
+
+
+
+        for (int n : nValues) {
+            Set<SizedParticle> particles = generateParticles(n, L);
+
+            globalJitWarmup(L, particles);
+
+            CellIndexService<SizedParticle> service = new CellIndexService<>(optimalM, L, RC, particles);
+
+            BenchmarkResult result = runBenchmark(service, particles);
+
+            CsvExporter.exportVariationNFreeDensityTelemetryBruteForce(n, L, optimalM, RC, RI_MIN, RI_MAX, CONTOUR,
+                    GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, result.mean, result.stdDev);
+
+            System.out.printf("[Variation N - Free Density] N: %d | L: %.0f | M: %d | Mean: %.4f ms | StdDev: %.4f ms%n",
+                    n, L, optimalM, result.mean, result.stdDev);
+        }
+    }
+
+    /**
+     * Section 4.2: Variation of N with Fixed Density
+     */
+    @Test
+    @DisplayName("Stress Test: Variation of N - Fixed Density (Section 4.2)")
+    void testVariationOfNFixedDensityBruteForce() {
+        int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
+
+        for (int n : nValues) {
+            int l = (int) Math.round(Math.sqrt(n / TARGET_DENSITY));
+            float actualDensity = (float) n / (l * l);
+            int m = 1;
+
+            Set<SizedParticle> particles = generateParticles(n, l);
+
+            globalJitWarmup(l, particles);
+
+            CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
+
+            BenchmarkResult result = runBenchmark(service, particles);
+
+            CsvExporter.exportVariationNFixedDensityTelemetryBruteForce(n, l, m, actualDensity, RC, RI_MIN, RI_MAX, CONTOUR,
+                    GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, result.mean, result.stdDev);
+
+            System.out.printf("[Variation N - Fixed Density] N: %d | L: %d | M: %d | Density: %.4f | Mean: %.4f ms | StdDev: %.4f ms%n",
+                    n, l, m, actualDensity, result.mean, result.stdDev);
+        }
+    }
+
+    /**
      * Determines the highest N that can be generated in a box of side {@code l} without overlapping.
      * Probes increasing values of N (with a few retries to absorb sampling variance) until the
      * generator fails, then returns the last successful N.
