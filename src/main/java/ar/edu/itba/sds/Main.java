@@ -5,13 +5,14 @@ import ar.edu.itba.sds.model.Entity2D;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 import ar.edu.itba.sds.service.CellIndexService2;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
-    static void main(String[] args) {
+    public static void main(String[] args) {
         ArgsParser parser = new ArgsParser(args);
         final int m  = parser.getM();         // Size of the mxm matrix
         final int l = parser.getL();         // Longitude
@@ -19,6 +20,7 @@ public class Main {
         final float riMin = parser.getRiMin();
         final float riMax = parser.getRiMax();
         final int n = parser.getN();
+        final boolean contour = parser.hasContour();
         final Set<SizedParticle> particles = new HashSet<>();
 
 
@@ -47,15 +49,20 @@ public class Main {
             }
         }
 
+
         System.out.println("N particles: " +particles.size());
         System.out.println("Grid size: " + l + " x " + l);
         System.out.println("m: " + m);
         System.out.println("r: " + rc);
 
         final CellIndexService2<SizedParticle> serv = new CellIndexService2<>(m,l,rc,particles);
+
+        LocalDateTime start = LocalDateTime.now();
         for (SizedParticle p : particles) {
-            serv.calculateNeighbors(p);
+            serv.calculateNeighbors(p, contour);
         }
+        LocalDateTime end = LocalDateTime.now();
+        System.out.println("Time taken to calculate neighbors: " + java.time.Duration.between(start, end).toMillis() + " ms");
 
 
 

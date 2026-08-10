@@ -17,6 +17,7 @@ public class CellIndexService2 <P extends Entity2D<P>> {
     //public final Map<Integer,Map<Cell, List<P>>> particlesInCells = new HashMap<>();
 
     public final Map<Integer, List<Cell<P>>> map = new HashMap<>();
+//    public final List<List<Cell<P>>> map;
 
 
 //    public final Map<P, List<P>> neighbors = new HashMap<>();
@@ -47,24 +48,24 @@ public class CellIndexService2 <P extends Entity2D<P>> {
         }
     }
 
-    public void calculateNeighbors(P particle) {
+    public void calculateNeighbors(P particle, boolean contour) {
 
         Set<Cell<P>> cellsToVisit = new HashSet<>();
         for (Cell<P> cell : particle.getCells()){
 
-            int cellColl = (int) (cell.getMinX() / m);
-            int cellRow = (int) (cell.getMinY() / m);
+            int cellColl = (int) Math.floor(cell.getMinX() / cellSize);
+            int cellRow = (int) Math.floor(cell.getMinY() / cellSize);
 
             cellsToVisit.add(cell);
-            top(cellColl, cellRow).ifPresent(cellsToVisit::add);
-            topRight(cellColl, cellRow).ifPresent(cellsToVisit::add);
-            bottomRight(cellColl, cellRow).ifPresent(cellsToVisit::add);
-            right(cellColl, cellRow).ifPresent(cellsToVisit::add);
+            top(cellColl, cellRow, contour).ifPresent(cellsToVisit::add);
+            topRight(cellColl, cellRow, contour).ifPresent(cellsToVisit::add);
+            bottomRight(cellColl, cellRow, contour).ifPresent(cellsToVisit::add);
+            right(cellColl, cellRow, contour).ifPresent(cellsToVisit::add);
         }
         for (Cell<P> cell : cellsToVisit) {
             for (P others : cell.getParticles()) {
                 if(others.equals(particle)) continue;
-                if(particle.euclideanDistance(others) <= rc) {
+                if(particle.euclideanDistance(others, contour, l) <= rc) {
                     particle.getNeighbors().add(others);
                     others.getNeighbors().add(particle);
                 }
@@ -103,39 +104,69 @@ public class CellIndexService2 <P extends Entity2D<P>> {
 
      */
 
-    private Optional<Cell<P>> top(int col, int row) {
+    private Optional<Cell<P>> top(int col, int row, boolean contour) {
+        if(contour)
+        {
+            if(row == 0)
+                row = m;
+        }
+
         if(row <= 0) return Optional.empty();
         Cell<P> cell = map.get(row-1).get(col);
         return Optional.of(cell);
     }
 
-    private Optional<Cell<P>> topRight(int col, int row) {
+    private Optional<Cell<P>> topRight(int col, int row, boolean contour) {
+        if(contour)
+        {
+            if (row == 0)
+                row = m;
+            if (col == m - 1)
+                col = -1;
+        }
+
+
         if(row <= 0) return Optional.empty();
         if(col >= m-1) return Optional.empty();
         Cell<P> cell = map.get(row-1).get(col+1);
         return Optional.of(cell);
     }
 
-    private Optional<Cell<P>> bottomRight(int col, int row) {
+    private Optional<Cell<P>> bottomRight(int col, int row,boolean contour) {
+        if(contour)
+        {
+            if(row == m-1)
+                row = -1;
+            if (col == m - 1)
+                col = -1;
+        }
+
+
         if(row >= m - 1) return Optional.empty();
         if(col >= m - 1) return Optional.empty();
         Cell<P> cell = map.get(row+1).get(col+1);
         return Optional.of(cell);
     }
 
-    private Optional<Cell<P>> left(int col, int row) {
-        if(col <= 0) return Optional.empty();
-        Cell<P> cell = map.get(row).get(col-1);
-        return Optional.of(cell);
-    }
+//    private Optional<Cell<P>> left(int col, int row) {
+//        if(col <= 0) return Optional.empty();
+//        Cell<P> cell = map.get(row).get(col-1);
+//        return Optional.of(cell);
+//    }
 
-    private Optional<Cell<P>> right(int col, int row) {
+    private Optional<Cell<P>> right(int col, int row, boolean contour) {
+        if(contour)
+        {
+            if(col == m-1)
+                col = -1;
+        }
+
         if(col >= m - 1) return Optional.empty();
-        Cell<P> cell = map.get(row+1).get(col);
+        Cell<P> cell = map.get(row).get(col+1);
         return Optional.of(cell);
     }
 
-    public Map<Integer, List<Cell<P>>> getMap() {
-        return map;
-    }
+//    public List<List<Cell<P>>> getMap() {
+//        return map;
+//    }
 }

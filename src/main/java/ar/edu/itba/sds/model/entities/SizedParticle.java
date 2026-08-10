@@ -21,14 +21,35 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     }
 
     @Override
-    public float euclideanDistance(SizedParticle other) {
-        return (float) ( Math.sqrt((this.x-other.x)*(this.x-other.x) +
-                        (this.y-other.y)*(this.y-other.y))) - this.r - other.r;
+    public float euclideanDistance(SizedParticle other, boolean contour, int l) {
+        float directX = (this.x - other.x)*(this.x - other.x);
+        float directY = (this.y - other.y)*(this.y - other.y);
+
+        if (!contour) return (float) Math.sqrt(directX+directY);
+
+        float contourX = ((this.x-l) - other.x)*((this.x-l) - other.x);
+        float contourY = ((this.y-l) - other.y)*((this.y-l) - other.y);
+
+        return (float) Math.sqrt(Math.min(directX, contourX) + Math.min(directY, contourY));
+
+
+
+//        float directDistance =  (float) ( Math.sqrt((this.x-other.x)*(this.x-other.x) +
+//                        (this.y-other.y)*(this.y-other.y))) - this.r - other.r;
+//
+//        if(contour) {
+//            float contourDistance = (float) (Math.sqrt((this.x- (other.x - l))*(this.x- (other.x - l)) +
+//                    (this.y- (other.y - l))*(this.y-(other.y - l)))) - this.r - other.r;
+//
+//            return Math.min(directDistance, contourDistance);
+//        }
+//        return directDistance;
+
     }
 
     @Override
     public boolean collidesWith(SizedParticle other) {
-        return euclideanDistance(other) <= 0;
+        return euclideanDistance(other, false, 0) <= 0;
     }
 
     @Override

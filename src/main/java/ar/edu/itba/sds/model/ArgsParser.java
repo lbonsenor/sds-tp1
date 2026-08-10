@@ -7,6 +7,7 @@ public class ArgsParser {
     float riMax = 0.26f;
     int m = (int) (l/rc);
     int n = 7;
+    boolean contour = false;
 
     boolean hasM = false;
 
@@ -79,6 +80,12 @@ public class ArgsParser {
                     }
                 }
                 break;
+             case "-c":
+             case "--contour":
+                 if (i + 1 < args.length) {
+                    contour = Boolean.parseBoolean(args[++i]);
+                 }
+                 break;
             }
         }
         if(!hasM) {
@@ -117,6 +124,10 @@ public class ArgsParser {
 
     public int getM() {
         return m;
+    }
+
+    public boolean hasContour() {
+        return contour;
     }
 
 }
