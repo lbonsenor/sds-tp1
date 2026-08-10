@@ -5,7 +5,7 @@ public class ArgsParser {
     float rc = 1;
     float riMin = 0.23f;
     float riMax = 0.26f;
-    int m = (int) (l/rc);
+    int m = (int) Math.floor(l / (rc + 2 * riMax));
     int n = 7;
     boolean contour = false;
 
@@ -89,7 +89,7 @@ public class ArgsParser {
             }
         }
         if(!hasM) {
-            m = (int) (l/rc);
+            m = (int) Math.floor(l / (rc + 2 * riMax));
         }
     }
 

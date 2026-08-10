@@ -27,6 +27,22 @@ public class CellIndexService<T extends SizedParticle> {
         this.M = M;
         this.L = L;
         this.rc = rc;
+
+        float maxRadius = 0;
+        for (T particle : particles) {
+            float r = (particle.getMaxX() - particle.getMinX()) / 2.0f;
+            maxRadius = Math.max(maxRadius, r);
+        }
+
+        // The Cell Index Method is only correct when a cell is large enough that two particles
+        // in non-adjacent cells cannot be neighbors: L/M > rc + 2*rmax.
+        if (L / M <= rc + 2 * maxRadius) {
+            throw new IllegalArgumentException(String.format(
+                    "M=%d exceeds the maximum allowed for this configuration: L/M=%.4f <= rc+2*rmax=%.4f. " +
+                            "The maximum permitted M is %d.",
+                    M, L / M, rc + 2 * maxRadius, (int) Math.floor(L / (rc + 2 * maxRadius))));
+        }
+
         float cellSize = L / M;
         this.grid = new ArrayList[M][M];
 
