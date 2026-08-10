@@ -3,6 +3,7 @@ package ar.edu.itba.sds.model.entities;
 import ar.edu.itba.sds.model.Entity2D;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class SizedParticle implements Entity2D<SizedParticle> {
@@ -21,16 +22,17 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     }
 
     @Override
-    public float euclideanDistance(SizedParticle other, boolean contour, int l) {
-        float directX = (this.x - other.x)*(this.x - other.x);
-        float directY = (this.y - other.y)*(this.y - other.y);
+    public float euclideanDistance(SizedParticle other, Optional<Float> contour) {
+        float dx = Math.abs(this.x - other.x);
+        float dy = Math.abs(this.y - other.y);
 
-        if (!contour) return (float) Math.sqrt(directX+directY);
+        if (contour.isPresent()) {
+            float L = contour.get();
+            dx = Math.min(dx, L - dx);
+            dy = Math.min(dy, L - dy);
+        }
 
-        float contourX = ((this.x-l) - other.x)*((this.x-l) - other.x);
-        float contourY = ((this.y-l) - other.y)*((this.y-l) - other.y);
-
-        return (float) Math.sqrt(Math.min(directX, contourX) + Math.min(directY, contourY));
+        return (float) Math.sqrt(dx * dx + dy * dy) - (this.r + other.r);
     }
 
     @Override

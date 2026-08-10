@@ -4,6 +4,7 @@ import ar.edu.itba.sds.model.Entity2D;
 
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public class Particle implements Entity2D<Particle> {
@@ -21,9 +22,16 @@ public class Particle implements Entity2D<Particle> {
     }
 
     @Override
-    public float euclideanDistance(Particle other, boolean contour, int l) {
-        return (float) Math.sqrt((this.x-other.x)*(this.x-other.x) +
-                        (this.y-other.y)*(this.y-other.y));
+    public float euclideanDistance(Particle other, Optional<Float> contour) {
+        float directX = (this.x - other.x)*(this.x - other.x);
+        float directY = (this.y - other.y)*(this.y - other.y);
+
+        if (contour.isEmpty()) return (float) Math.sqrt(directX+directY);
+
+        float contourX = ((this.x-contour.get()) - other.x)*((this.x-contour.get()) - other.x);
+        float contourY = ((this.y-contour.get()) - other.y)*((this.y-contour.get()) - other.y);
+
+        return (float) Math.sqrt(Math.min(directX, contourX) + Math.min(directY, contourY));
     }
 
     @Override

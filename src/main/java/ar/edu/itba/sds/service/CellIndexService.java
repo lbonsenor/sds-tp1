@@ -5,6 +5,7 @@ import ar.edu.itba.sds.model.entities.SizedParticle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class CellIndexService<T extends SizedParticle> {
 
@@ -14,12 +15,11 @@ public class CellIndexService<T extends SizedParticle> {
     private final List<T>[][] grid;
 
     // Neighbor offsets for 2D symmetric Cell Index Method:
-    // Right (1,0), Top-Right (1,1), Top (0,1), Top-Left (-1,1)
     private static final int[][] NEIGHBOR_OFFSETS = {
             {1, 0},
             {1, 1},
             {0, 1},
-            {-1, 1}
+            {1, -1}
     };
 
     @SuppressWarnings("unchecked")
@@ -95,15 +95,9 @@ public class CellIndexService<T extends SizedParticle> {
     }
 
     private void checkAndAddNeighbor(T p1, T p2, boolean contour) {
-        float centerToCenterDistance = p1.euclideanDistance(p2, contour, (int) L);
+        float distance = p1.euclideanDistance(p2, contour ? Optional.of(L) : Optional.empty());;
 
-        // Pre-calculated or direct radius access avoids repeated bounds math
-        float r1 = (p1.getMaxX() - p1.getMinX()) * 0.5f;
-        float r2 = (p2.getMaxX() - p2.getMinX()) * 0.5f;
-
-        float surfaceDistance = centerToCenterDistance - r1 - r2;
-
-        if (surfaceDistance <= rc) {
+        if (distance <= rc) {
             p1.getNeighbors().add(p2);
             p2.getNeighbors().add(p1);
         }
