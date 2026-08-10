@@ -90,6 +90,9 @@ for path in sorted(m_csv_files):
         plt.title(title, fontsize=14, fontweight="bold")
         plt.xlabel("M (Grid Divisions)")
         plt.ylabel("Mean Execution Time (ms)")
+
+        # Double log scale (Log-Log)
+        plt.xscale("log")
         plt.yscale("log")
 
         add_params_box(plt.gca(), params_text(df, exclude=("M",)))
@@ -162,6 +165,9 @@ for comp in n_comparisons:
         plt.title(f"Execution Time vs N ({comp['title_mode']}: Standard vs Brute Force)", fontsize=14, fontweight="bold")
         plt.xlabel("N (Number of Particles)")
         plt.ylabel("Mean Execution Time (ms)")
+
+        # Double log scale (Log-Log)
+        plt.xscale("log")
         plt.yscale("log")
 
         plt.legend(title="Algorithm Implementation", loc="upper left", fontsize=10, title_fontsize=11)
