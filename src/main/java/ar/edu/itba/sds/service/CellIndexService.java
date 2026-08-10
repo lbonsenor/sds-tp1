@@ -95,7 +95,7 @@ public class CellIndexService<T extends SizedParticle> {
     }
 
     private void checkAndAddNeighbor(T p1, T p2, boolean contour) {
-        float distance = p1.euclideanDistance(p2, contour ? Optional.of(L) : Optional.empty());;
+        float distance = p1.euclideanDistance(p2, contour ? Optional.of(L) : Optional.empty());
 
         if (distance <= rc) {
             p1.getNeighbors().add(p2);
