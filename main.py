@@ -1,92 +1,148 @@
-
-import matplotlib
-matplotlib.use('QtAgg')
-
-import random
-import math
-from matplotlib.patches import Circle
+import re
+import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 
-from classes.particle import Particle
-    
+# File paths
+DYNAMIC_DATA_PATH = "out/dynamic_data.csv"
+STATIC_DATA_PATH = "out/static_data.csv"
 
-def generate_particles(num_particles, bounds, radius_range, max_attempts=5000):
-    xmin, xmax, ymin, ymax = bounds
-    rmin, rmax = radius_range
-    particles = []
+# Color definitions
+COLOR_DEFAULT = "#A0A0A0"  # Light grey
+COLOR_CLICKED = "#E74C3C"  # Red
+COLOR_NEIGHBOUR = "#3498DB"  # Blue
+COLOR_EDGE = "#2C3E50"  # Dark border
 
-    attempts = 0
-    while len(particles) < num_particles and attempts < max_attempts:
-        attempts += 1
-        r = random.uniform(rmin, rmax)
-        # Keep center inside boundary so the circle doesn't clip
-        x = random.uniform(xmin + r, xmax - r)
-        y = random.uniform(ymin + r, ymax - r)
-        
-        new_particle = Particle(x, y, r)
-        
-        # Ensure no collision with existing particles
-        if not any(new_particle.collides_with(p) for p in particles):
-            particles.append(new_particle)
-            
-    return particles
 
-def plot_interactive_particles(particles, bounds):
+def parse_neighbours(val):
+    """Parses neighbour values into a list of integer IDs (handles spaces, commas, brackets)."""
+    if pd.isna(val) or val is None:
+        return []
+    val_str = str(val).strip("[]() \t\n\r")
+    if not val_str:
+        return []
+    tokens = re.split(r"[\s,]+", val_str)
+    neighbours = []
+    for token in tokens:
+        if token:
+            try:
+                neighbours.append(int(float(token)))
+            except ValueError:
+                pass
+    return neighbours
+
+
+def main():
+    # 1. Load data
+    dynamic_df = pd.read_csv(DYNAMIC_DATA_PATH)
+    static_df = pd.read_csv(STATIC_DATA_PATH)
+
+    # Filter for t = 0
+    t0_df = dynamic_df[dynamic_df["t"] == 0].copy()
+
+    # Merge dynamic and static data on 'ID'
+    merged_df = t0_df.merge(static_df, on="ID")
+
+    # Parse neighbours column into lists of IDs
+    merged_df["neighbours_list"] = merged_df["neighbours"].apply(
+        parse_neighbours
+    )
+
+    # 2. Setup Plot
     fig, ax = plt.subplots(figsize=(8, 8))
-    xmin, xmax, ymin, ymax = bounds
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(ymin, ymax)
-    ax.set_aspect('equal')
-    ax.set_title("Click any particle to display details", fontsize=12)
+    ax.set_aspect("equal")
+    ax.set_title(
+        "Particle System (t=0)\nClick on a particle to highlight its neighbours",
+        fontsize=12,
+    )
+    ax.set_xlabel("X Position")
+    ax.set_ylabel("Y Position")
 
-    # Use Circle directly here instead of plt.Circle
-    for p in particles:
-        circle = Circle((p.x, p.y), p.r, color=random_color(), alpha=0.7, ec='black', lw=1.5)
+    # Dictionary mapping particle ID -> Circle patch & particle data
+    particle_patches = {}
+    particle_data = {}
+
+    for _, row in merged_df.iterrows():
+        p_id = int(row["ID"])
+        x, y = row["Xpos"], row["Ypos"]
+        r = row["radius"]
+        neighbours = row["neighbours_list"]
+
+        # Create Circle patch
+        circle = Circle(
+            (x, y),
+            radius=r,
+            facecolor=COLOR_DEFAULT,
+            edgecolor=COLOR_EDGE,
+            linewidth=1.0,
+            zorder=2,
+        )
         ax.add_patch(circle)
 
-    # Tooltip annotation
-    annot = ax.annotate(
-        "", xy=(0, 0), xytext=(15, 15), textcoords="offset points",
-        bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="black", alpha=0.9),
-        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0")
-    )
-    annot.set_visible(False)
+        # Store particle metadata and patch
+        particle_patches[p_id] = circle
+        particle_data[p_id] = {
+            "x": x,
+            "y": y,
+            "radius": r,
+            "neighbours": neighbours,
+        }
 
+    # Auto-scale plot limits with padding
+    ax.autoscale_view()
+    ax.margins(0.05)
+
+    # 3. Interactive Click Event Handler
     def on_click(event):
-        if event.inaxes != ax or event.xdata is None or event.ydata is None:
-            return
+        if event.xdata is None or event.ydata is None:
+            return  # Click was outside the axes
 
-        clicked_particle = None
-        for p in particles:
-            dist = math.hypot(event.xdata - p.x, event.ydata - p.y)
-            if dist <= p.r:
-                clicked_particle = p
-                break
+        click_x, click_y = event.xdata, event.ydata
+        clicked_id = None
+        min_dist = float("inf")
 
-        if clicked_particle:
-            annot.xy = (clicked_particle.x, clicked_particle.y)
-            annot.set_text(
-                f"x: {clicked_particle.x:.2f}\n"
-                f"y: {clicked_particle.y:.2f}\n"
-                f"r: {clicked_particle.r:.2f}"
+        # Find which particle was clicked (closest center within radius)
+        for p_id, data in particle_data.items():
+            dist = (
+                (click_x - data["x"]) ** 2 + (click_y - data["y"]) ** 2
+            ) ** 0.5
+            if dist <= data["radius"] and dist < min_dist:
+                min_dist = dist
+                clicked_id = p_id
+
+        # Reset all particles to default color
+        for circle in particle_patches.values():
+            circle.set_facecolor(COLOR_DEFAULT)
+
+        # Update highlighted colors if a particle was selected
+        if clicked_id is not None:
+            neighbours = particle_data[clicked_id]["neighbours"]
+
+            # Color neighbours blue
+            for n_id in neighbours:
+                if n_id in particle_patches:
+                    particle_patches[n_id].set_facecolor(COLOR_NEIGHBOUR)
+
+            # Color clicked particle red
+            particle_patches[clicked_id].set_facecolor(COLOR_CLICKED)
+
+            ax.set_title(
+                f"Selected Particle ID: {clicked_id} (Red) | Neighbours: {len(neighbours)} (Blue)",
+                fontsize=12,
             )
-            annot.set_visible(True)
         else:
-            annot.set_visible(False)
+            ax.set_title(
+                "Particle System (t=0)\nClick on a particle to highlight its neighbours",
+                fontsize=12,
+            )
 
         fig.canvas.draw_idle()
 
+    # Connect click event
     fig.canvas.mpl_connect("button_press_event", on_click)
+
     plt.show()
-    
-def random_color():
-    return (random.random(), random.random(), random.random())
 
-# --- Configuration ---
+
 if __name__ == "__main__":
-    BOUNDS = (0, 100, 0, 100)       # (xmin, xmax, ymin, ymax)
-    RADIUS_RANGE = (2.0, 7.0)       # Min and Max radius
-    NUM_PARTICLES = 50              # Number of particles
-
-    particle_list = generate_particles(NUM_PARTICLES, BOUNDS, RADIUS_RANGE)
-    plot_interactive_particles(particle_list, BOUNDS)
+    main()

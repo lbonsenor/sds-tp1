@@ -1,4 +1,4 @@
-package ar.edu.itba.sds.model;
+package ar.edu.itba.sds.utils;
 
 public class ArgsParser {
     int l = 20;

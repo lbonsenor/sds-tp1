@@ -31,25 +31,16 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         float contourY = ((this.y-l) - other.y)*((this.y-l) - other.y);
 
         return (float) Math.sqrt(Math.min(directX, contourX) + Math.min(directY, contourY));
-
-
-
-//        float directDistance =  (float) ( Math.sqrt((this.x-other.x)*(this.x-other.x) +
-//                        (this.y-other.y)*(this.y-other.y))) - this.r - other.r;
-//
-//        if(contour) {
-//            float contourDistance = (float) (Math.sqrt((this.x- (other.x - l))*(this.x- (other.x - l)) +
-//                    (this.y- (other.y - l))*(this.y-(other.y - l)))) - this.r - other.r;
-//
-//            return Math.min(directDistance, contourDistance);
-//        }
-//        return directDistance;
-
     }
 
     @Override
     public boolean collidesWith(SizedParticle other) {
-        return euclideanDistance(other, false, 0) <= 0;
+        float dx = this.x - other.x;
+        float dy = this.y - other.y;
+        float centerDistance = (float) Math.sqrt(dx * dx + dy * dy);
+
+        // Collides if distance between centers is less than or equal to sum of radii
+        return (centerDistance - (this.r + other.r)) <= 0;
     }
 
     @Override
