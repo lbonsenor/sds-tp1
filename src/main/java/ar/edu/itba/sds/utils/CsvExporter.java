@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class CsvExporter {
@@ -30,7 +31,7 @@ public class CsvExporter {
             for (int i = 0; i < particleList.size(); i++) {
                 SizedParticle p = particleList.get(i);
                 float r = (p.getMaxX() - p.getMinX()) / 2.0f;
-                writer.write(i + "," + r + "\n");
+                writer.write(String.format(Locale.US, "%d,%.4f\n", i, r));
             }
         } catch (IOException e) {
             System.err.println("Error writing static CSV: " + e.getMessage());
@@ -61,13 +62,16 @@ public class CsvExporter {
                     neighborsStr = "[" + neighborsStr + "]";
                 }
 
-                writer.write(timestep + "," + i + "," + x + "," + y + "," + neighborsStr + "\n");
+                writer.write(String.format(Locale.US, "%d,%d,%.4f,%.4f,%s\n", timestep, i, x, y, neighborsStr));
             }
         } catch (IOException e) {
             System.err.println("Error writing dynamic CSV: " + e.getMessage());
         }
     }
 
+    /**
+     * Standard execution telemetry writer for single/manual runs.
+     */
     public static void exportExecutionTelemetry(int n, int l, int m, float rc,
                                                 float riMin, float riMax, long executionTimeMs) {
         ensureDirectoryExists(TELEMETRY_DIR);
@@ -79,8 +83,8 @@ public class CsvExporter {
                 writer.write("N,L,M,Rc,riMin,riMax,density,execution_time_ms\n");
             }
 
-            float density = (float) n / l;
-            writer.write(String.format("%d,%d,%d,%f,%f,%f,%f,%d\n",
+            float density = (float) n / (l * l);
+            writer.write(String.format(Locale.US, "%d,%d,%d,%.2f,%.2f,%.2f,%.4f,%d\n",
                     n, l, m, rc, riMin, riMax, density, executionTimeMs));
 
         } catch (IOException e) {
@@ -88,10 +92,53 @@ public class CsvExporter {
         }
     }
 
+    public static void exportVariationMTelemetry(int n, int m, double executionTimeMs) {
+        ensureDirectoryExists(TELEMETRY_DIR);
+        File file = new File(TELEMETRY_DIR + "/variation_m_N" + n + ".csv");
+        boolean fileExists = file.exists();
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            if (!fileExists) {
+                writer.write("M,execution_time_ms\n");
+            }
+            writer.write(String.format(Locale.US, "%d,%.4f\n", m, executionTimeMs));
+        } catch (IOException e) {
+            System.err.println("Error writing variation M CSV: " + e.getMessage());
+        }
+    }
+
+    public static void exportVariationNFreeDensityTelemetry(int n, double executionTimeMs) {
+        ensureDirectoryExists(TELEMETRY_DIR);
+        File file = new File(TELEMETRY_DIR + "/variation_n_free_density.csv");
+        boolean fileExists = file.exists();
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            if (!fileExists) {
+                writer.write("N,execution_time_ms\n");
+            }
+            writer.write(String.format(Locale.US, "%d,%.4f\n", n, executionTimeMs));
+        } catch (IOException e) {
+            System.err.println("Error writing variation N free density CSV: " + e.getMessage());
+        }
+    }
+
+    public static void exportVariationNFixedDensityTelemetry(int n, int l, int m, float density, double executionTimeMs) {
+        ensureDirectoryExists(TELEMETRY_DIR);
+        File file = new File(TELEMETRY_DIR + "/variation_n_fixed_density.csv");
+        boolean fileExists = file.exists();
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            if (!fileExists) {
+                writer.write("N,L,M,density,execution_time_ms\n");
+            }
+            writer.write(String.format(Locale.US, "%d,%d,%d,%.4f,%.4f\n", n, l, m, density, executionTimeMs));
+        } catch (IOException e) {
+            System.err.println("Error writing variation N fixed density CSV: " + e.getMessage());
+        }
+    }
+
     private static void ensureDirectoryExists(String path) {
         File dir = new File(path);
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
+        if (!dir.exists()) dir.mkdirs();
     }
 }
