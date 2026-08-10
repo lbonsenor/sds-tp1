@@ -26,7 +26,7 @@ public class StressTest {
     @DisplayName("Stress Test: Variation of M (Section 3)")
     void testVariationOfM() {
         int l = 20;
-        int[] nValues = {1000, 1100};
+        int[] nValues = {1000, 500};
         boolean contour = false;
 
         double maxCellSizeLimit = RC + 2 * RI_MAX;
@@ -93,6 +93,64 @@ public class StressTest {
             int l = (int) Math.round(Math.sqrt(n / targetDensity));
             float actualDensity = (float) n / (l * l);
             int m = (int) Math.floor(l / (RC + 2 * RI_MAX));
+
+            Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
+
+            globalJitWarmup(l, particles, contour);
+
+            CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
+
+            double medianTimeMs = runBenchmark(service, particles, contour);
+
+            CsvExporter.exportVariationNFixedDensityTelemetryBruteForce(n, l, m, actualDensity, medianTimeMs);
+
+            System.out.printf("[Variation N - Fixed Density] N: %d | L: %d | M: %d | Density: %.4f | Median Time: %.4f ms%n",
+                    n, l, m, actualDensity, medianTimeMs);
+        }
+    }
+
+    /**
+     * Section 4.1: Variation of N with Free Density
+     */
+    @Test
+    @DisplayName("Stress Test: Variation of N - Free Density (Section 4.1)")
+    void testVariationOfNFreeDensityBruteForce() {
+        int l = 20;
+        int m = 1;
+        boolean contour = false;
+
+        int[] nValues = {10, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500};
+
+        for (int n : nValues) {
+            Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
+
+            globalJitWarmup(l, particles, contour);
+
+            CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
+
+            double medianTimeMs = runBenchmark(service, particles, contour);
+
+            CsvExporter.exportVariationNFreeDensityTelemetryBruteForce(n, medianTimeMs);
+
+            System.out.printf("[Variation N - Free Density] N: %d | M: %d | Median Time: %.4f ms%n",
+                    n, m, medianTimeMs);
+        }
+    }
+
+    /**
+     * Section 4.2: Variation of N with Fixed Density
+     */
+    @Test
+    @DisplayName("Stress Test: Variation of N - Fixed Density (Section 4.2)")
+    void testVariationOfNFixedDensityBruteForce() {
+        float targetDensity = 0.5f;
+        int[] nValues = {50, 100, 200, 400, 600, 800};
+        boolean contour = false;
+
+        for (int n : nValues) {
+            int l = (int) Math.round(Math.sqrt(n / targetDensity));
+            float actualDensity = (float) n / (l * l);
+            int m = 1;
 
             Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
 

@@ -137,6 +137,36 @@ public class CsvExporter {
         }
     }
 
+    public static void exportVariationNFreeDensityTelemetryBruteForce(int n, double executionTimeMs) {
+        ensureDirectoryExists(TELEMETRY_DIR);
+        File file = new File(TELEMETRY_DIR + "/variation_n_free_density_brute_force.csv");
+        boolean fileExists = file.exists();
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            if (!fileExists) {
+                writer.write("N,execution_time_ms\n");
+            }
+            writer.write(String.format(Locale.US, "%d,%.4f\n", n, executionTimeMs));
+        } catch (IOException e) {
+            System.err.println("Error writing variation N free density CSV: " + e.getMessage());
+        }
+    }
+
+    public static void exportVariationNFixedDensityTelemetryBruteForce(int n, int l, int m, float density, double executionTimeMs) {
+        ensureDirectoryExists(TELEMETRY_DIR);
+        File file = new File(TELEMETRY_DIR + "/variation_n_fixed_density_brute_force.csv");
+        boolean fileExists = file.exists();
+
+        try (FileWriter writer = new FileWriter(file, true)) {
+            if (!fileExists) {
+                writer.write("N,L,M,density,execution_time_ms\n");
+            }
+            writer.write(String.format(Locale.US, "%d,%d,%d,%.4f,%.4f\n", n, l, m, density, executionTimeMs));
+        } catch (IOException e) {
+            System.err.println("Error writing variation N fixed density CSV: " + e.getMessage());
+        }
+    }
+
     private static void ensureDirectoryExists(String path) {
         File dir = new File(path);
         if (!dir.exists()) dir.mkdirs();
