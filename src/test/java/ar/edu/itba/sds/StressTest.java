@@ -7,6 +7,7 @@ import ar.edu.itba.sds.utils.RandomParticleGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
 import java.util.Set;
 
 public class StressTest {
@@ -17,8 +18,10 @@ public class StressTest {
     private static final float RC = 1.0f;
     private static final boolean CONTOUR = false;
 
-    private static final int GLOBAL_WARMUP_RUNS = 1000;
-    private static final int BENCHMARK_ITERATIONS = 200;
+    private static final int GLOBAL_WARMUP_RUNS = 2000;
+    private static final int BENCHMARK_ITERATIONS = 1500;
+
+    private static final int SEED = 47;
 
     // Intermediate N used in Section 3, also defines the intermediate density of Section 4.1
     private static final int INTERMEDIATE_N = 400;
@@ -48,6 +51,9 @@ public class StressTest {
     @Test
     @DisplayName("Stress Test: Variation of M (Section 3)")
     void testVariationOfM() {
+
+        Random random = new Random(SEED);
+
         int maxN = findMaxFeasibleN(L);
         int[] nValues = {INTERMEDIATE_N, maxN};
 
@@ -55,7 +61,7 @@ public class StressTest {
         int maxM = (int) Math.floor(L / maxCellSizeLimit);
 
         for (int n : nValues) {
-            Set<SizedParticle> particles = generateParticles(n, L);
+            Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
 
             globalJitWarmup(L, particles);
 
@@ -85,10 +91,10 @@ public class StressTest {
         int[] nValues = {10, 50, 100, 200, 300, INTERMEDIATE_N, 500, 600, 700, 800, 900, 1000, maxN};
 
 
-
+        Random random = new Random(SEED);
 
         for (int n : nValues) {
-            Set<SizedParticle> particles = generateParticles(n, L);
+            Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
 
             globalJitWarmup(L, particles);
 
@@ -112,12 +118,14 @@ public class StressTest {
     void testVariationOfNFixedDensity() {
         int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
 
+        Random random = new Random(SEED);
+
         for (int n : nValues) {
             int l = (int) Math.round(Math.sqrt(n / TARGET_DENSITY));
             float actualDensity = (float) n / (l * l);
             int m = (int) Math.floor(l / (RC + 2 * RI_MAX));
 
-            Set<SizedParticle> particles = generateParticles(n, l);
+            Set<SizedParticle> particles = generateParticles(n, l, random.nextInt());
 
             globalJitWarmup(l, particles);
 
@@ -142,13 +150,13 @@ public class StressTest {
         int optimalM = 1;
         int maxN = findMaxFeasibleN(L);
 
-        int[] nValues = {10, 50, 100, 200, 300, INTERMEDIATE_N, 500, 600, 700, 800, 900, 1000, maxN};
+        int[] nValues = {10, 50, 100, 200, 300, INTERMEDIATE_N, 500, 600, 700, 800, 900, maxN};
 
-
+        Random random = new Random(SEED);
 
 
         for (int n : nValues) {
-            Set<SizedParticle> particles = generateParticles(n, L);
+            Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
 
             globalJitWarmup(L, particles);
 
@@ -172,12 +180,14 @@ public class StressTest {
     void testVariationOfNFixedDensityBruteForce() {
         int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
 
+        Random random = new Random(SEED);
+
         for (int n : nValues) {
             int l = (int) Math.round(Math.sqrt(n / TARGET_DENSITY));
             float actualDensity = (float) n / (l * l);
             int m = 1;
 
-            Set<SizedParticle> particles = generateParticles(n, l);
+            Set<SizedParticle> particles = generateParticles(n, l, random.nextInt());
 
             globalJitWarmup(l, particles);
 
@@ -207,9 +217,10 @@ public class StressTest {
         int step = 50;
         int cap = 2000;
         int best = start;
+        Random random = new Random(SEED);
 
         for (int candidate = start; candidate <= cap; candidate += step) {
-            if (canGenerateReliably(candidate, l)) {
+            if (canGenerateReliably(candidate, l, random.nextInt())) {
                 best = candidate;
             } else {
                 break;
@@ -230,10 +241,10 @@ public class StressTest {
      * True only if every attempt generated all {@code n} particles, filtering out sampling variance
      * near the maximum packing density.
      */
-    private boolean canGenerateReliably(int n, float l) {
+    private boolean canGenerateReliably(int n, float l, int seed) {
         for (int attempt = 0; attempt < 3; attempt++) {
             try {
-                RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
+                RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX, seed);
             } catch (IllegalStateException e) {
                 return false;
             }
@@ -244,11 +255,11 @@ public class StressTest {
     /**
      * Generates {@code n} particles, retrying with fresh random seeds to absorb sampling variance.
      */
-    private Set<SizedParticle> generateParticles(int n, float l) {
+    private Set<SizedParticle> generateParticles(int n, float l, int seed) {
         IllegalStateException lastFailure = null;
         for (int attempt = 0; attempt < 5; attempt++) {
             try {
-                return RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX);
+                return RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX,seed);
             } catch (IllegalStateException e) {
                 lastFailure = e;
             }

@@ -8,6 +8,7 @@ import ar.edu.itba.sds.utils.RandomParticleGenerator;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Random;
 import java.util.Set;
 
 public class Main {
@@ -22,9 +23,10 @@ public class Main {
         final float riMax = parser.getRiMax();
         final int n = parser.getN();
         final boolean contour = parser.hasContour();
+        final Random random = new Random();
 
         // 1. Generate particles
-        Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, riMin, riMax);
+        Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, riMin, riMax, random.nextInt());
 
         System.out.println("N particles: " + particles.size());
         System.out.println("Grid size: " + l + " x " + l);
