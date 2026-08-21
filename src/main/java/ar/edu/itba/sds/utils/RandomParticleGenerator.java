@@ -7,6 +7,7 @@ import java.util.*;
 public class RandomParticleGenerator {
 
     private static final int MAX_ATTEMPTS_PER_PARTICLE = 10_000;
+    private static final float V_MODULE = (float) 0.03;
 
     public static Set<SizedParticle> generate(int n, float l, float rMin, float rMax, int seed) {
         Set<SizedParticle> particles = new HashSet<>();
@@ -36,8 +37,9 @@ public class RandomParticleGenerator {
                 float r = rMin + random.nextFloat() * (rMax - rMin);
                 float x = r + random.nextFloat() * (l - 2 * r);
                 float y = r + random.nextFloat() * (l - 2 * r);
+                float angle = random.nextFloat() * 360;
 
-                SizedParticle p = new SizedParticle(x, y, r);
+                SizedParticle p = new SizedParticle(x, y, r,V_MODULE, angle);
 
                 int cellX = Math.min((int) (x / cellSize), gridDim - 1);
                 int cellY = Math.min((int) (y / cellSize), gridDim - 1);

@@ -4,21 +4,26 @@ import ar.edu.itba.sds.model.Entity2D;
 
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 public class SizedParticle implements Entity2D<SizedParticle> {
     private final float x;
     private final float y;
     private final float r;
+    private final float v;
+    private final float angle;
 
     private final Set<SizedParticle> neighbors = new HashSet<>();
     private final Set<Cell<SizedParticle>> cells = new HashSet<>();
 
-    public SizedParticle(float x, float y, float r) {
+    public SizedParticle(float x, float y, float r, float v, float angle) {
         if (x-r < 0 || y-r < 0) throw new IllegalArgumentException();
         this.x = x;
         this.y = y;
         this.r = r;
+        this.v = v;
+        this.angle = angle;
     }
 
     @Override
@@ -58,7 +63,36 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         return (dx * dx + dy * dy) <= (this.r * this.r);
     }
 
-    @Override
+    public SizedParticle getNewPositionStandard(float deltaTime, float eta, int seed) {
+
+        float dx = v * (float) Math.cos(angle);
+        float dy = v * (float) Math.sin(angle);
+
+        float radius_sin_accum = (float) Math.sin(angle);
+        float radius_cos_accum = (float) Math.cos(angle);
+        int count = 1;
+
+        for (SizedParticle p : neighbors){
+            // if collidesWith este paso podria ser innecesario. Evaluar eso.
+            if(collidesWith(p)){
+                radius_cos_accum = (float) (radius_cos_accum + Math.cos(p.angle));
+                radius_sin_accum = (float) (radius_sin_accum + Math.sin(p.angle));
+                count++;
+            }
+        }
+        Random random = new Random(seed);
+        float deltaTheta = (random.nextFloat() - 0.5f) * eta;
+        float newAngle = (float) Math.toDegrees(Math.atan2(radius_sin_accum/count,radius_cos_accum/count))+deltaTheta;
+
+        return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
+    }
+
+    public SizedParticle getNewPositionVotante(float deltaTime, float eta, int seed) {
+        return new SizedParticle(0,0,0,0,0);
+    }
+
+
+        @Override
     public float getMinX() {
         return x-r;
     }
@@ -78,6 +112,14 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         return y+r;
     }
 
+    public float getAngle() {
+        return angle;
+    }
+
+    public float getV() {
+        return v;
+    }
+
     @Override
     public Set<SizedParticle> getNeighbors() {
         return neighbors;
@@ -94,6 +136,8 @@ public class SizedParticle implements Entity2D<SizedParticle> {
                 "x=" + x +
                 ", y=" + y +
                 ", r=" + r +
+                ", v=" + v +
+                ", angle =" + angle +
                 '}';
     }
 }
