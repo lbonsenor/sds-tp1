@@ -2,10 +2,7 @@ package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class SizedParticle implements Entity2D<SizedParticle> {
     private final float x;
@@ -74,11 +71,9 @@ public class SizedParticle implements Entity2D<SizedParticle> {
 
         for (SizedParticle p : neighbors){
             // if collidesWith este paso podria ser innecesario. Evaluar eso.
-            if(collidesWith(p)){
                 radius_cos_accum = (float) (radius_cos_accum + Math.cos(p.angle));
                 radius_sin_accum = (float) (radius_sin_accum + Math.sin(p.angle));
                 count++;
-            }
         }
         Random random = new Random(seed);
         float deltaTheta = (random.nextFloat() - 0.5f) * eta;
@@ -88,7 +83,15 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     }
 
     public SizedParticle getNewPositionVotante(float deltaTime, float eta, int seed) {
-        return new SizedParticle(0,0,0,0,0);
+        float dx = v * (float) Math.cos(angle);
+        float dy = v * (float) Math.sin(angle);
+
+        Random random = new Random(seed);
+        float deltaTheta = (random.nextFloat() - 0.5f) * eta;
+        float newAngle = new ArrayList<>(neighbors)
+                .get(random.nextInt(neighbors.size())).getAngle() + deltaTheta;
+
+        return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
     }
 
 
