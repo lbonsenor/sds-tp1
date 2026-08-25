@@ -1,5 +1,6 @@
 package ar.edu.itba.sds;
 
+import ar.edu.itba.sds.service.OffLatticeService;
 import ar.edu.itba.sds.utils.ArgsParser;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 import ar.edu.itba.sds.service.CellIndexService;
@@ -8,6 +9,7 @@ import ar.edu.itba.sds.utils.RandomParticleGenerator;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedList;
 import java.util.Random;
 import java.util.Set;
 
@@ -23,6 +25,9 @@ public class Main {
         final float riMax = parser.getRiMax();
         final int n = parser.getN();
         final boolean contour = parser.hasContour();
+        final float totalTime = parser.getEntireT();
+        final float deltaTime = parser.getDeltaT();
+        final float eta = parser.getEta();
         final Random random = new Random();
 
         // 1. Generate particles
@@ -35,22 +40,30 @@ public class Main {
 
         // 2. Compute neighbors
         final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
+        final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>(m,l,rc);
 
-        Instant start = Instant.now();
-        service.calculateNeighbors(contour);
-        Instant end = Instant.now();
+        for (float t = 0 ; t < totalTime; t += deltaTime){
 
-        long executionTimeMs = Duration.between(start, end).toMillis();
-        System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ms");
+            Instant start = Instant.now();
+            service.calculateNeighbors(contour);
+            Instant end = Instant.now();
 
-        // 3. Export data
-        CsvExporter.exportExecutionTelemetry(n, l, m, rc, riMin, riMax, executionTimeMs);
-        CsvExporter.exportParticleData(particles, 0);
+            long executionTimeMs = Duration.between(start, end).toMillis();
+            System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ms");
 
-        // 4. Print results
-        for (SizedParticle p : particles) {
-            System.out.println("Particle: " + p);
-            System.out.println("Neighbors: " + p.getNeighbors());
+            // 3. Export data
+            CsvExporter.exportExecutionTelemetry(n, l, m, rc, riMin, riMax, executionTimeMs);
+            CsvExporter.exportParticleData(particles, 0);
+
+            // 4. Print results
+            for (SizedParticle p : particles) {
+                System.out.println("Particle: " + p);
+                System.out.println("Neighbors: " + p.getNeighbors());
+            }
+            particles = offLatticeService.getNewVotanteListOfParticles(deltaTime, eta, random.hashCode(),particles);
+//            particles = offLatticeService.getNewStandardListOfParticles(deltaTime, eta, random.hashCode(),particles);
+//            System.out.println(particles);
+
         }
     }
 }

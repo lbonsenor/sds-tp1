@@ -88,9 +88,11 @@ public class SizedParticle implements Entity2D<SizedParticle> {
 
         Random random = new Random(seed);
         float deltaTheta = (random.nextFloat() - 0.5f) * eta;
-        float newAngle = new ArrayList<>(neighbors)
-                .get(random.nextInt(neighbors.size())).getAngle() + deltaTheta;
-
+        float newAngle = this.angle;
+        if (!neighbors.isEmpty()) {
+            newAngle = new ArrayList<>(neighbors)
+                    .get(random.nextInt(neighbors.size())).getAngle() + deltaTheta;
+        }
         return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
     }
 

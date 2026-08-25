@@ -8,8 +8,11 @@ public class ArgsParser {
     int m = (int) Math.floor(l / (rc + 2 * riMax));
     int n = 7;
     boolean contour = false;
-
     boolean hasM = false;
+
+    float deltaT = 0.5f;
+    float entireT = 5f;
+    float eta = 2f;
 
 
     public ArgsParser(String[] args) {
@@ -121,13 +124,24 @@ public class ArgsParser {
     }
 
 
-
     public int getM() {
         return m;
     }
 
     public boolean hasContour() {
         return contour;
+    }
+
+    public float getDeltaT(){
+        return deltaT;
+    }
+
+    public float getEntireT(){
+        return entireT;
+    }
+
+    public float getEta(){
+        return eta;
     }
 
 }
