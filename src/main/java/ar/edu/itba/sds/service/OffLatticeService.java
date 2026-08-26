@@ -10,25 +10,31 @@ public class OffLatticeService {
     public OffLatticeService() {
     }
 
-    public Set<Entity2D> getNewStandardListOfParticles(float deltaTime, float eta, Random random, Collection<Entity2D> particles){
+    public <T extends Entity2D> Set<T> getNewStandardListOfParticles(
+        float deltaTime, float eta, Random random, Collection<T> particles) {
 
-        Set<Entity2D> toReturn = new LinkedHashSet<>();
-        for (Entity2D p: particles){
-            toReturn.add(p.getNewPositionStandard(deltaTime,eta,random));
+        Set<T> toReturn = new LinkedHashSet<>();
+        for (T p : particles) {
+            @SuppressWarnings("unchecked")
+            T next = (T) p.getNewPositionStandard(deltaTime, eta, random);
+            toReturn.add(next);
         }
         return toReturn;
     }
 
-    public Set<Entity2D> getNewVotanteListOfParticles(float deltaTime,  float eta, Random random,Collection<Entity2D> particles){
+    public <T extends Entity2D> Set<T> getNewVotanteListOfParticles(
+            float deltaTime, float eta, Random random, Collection<T> particles) {
 
-        Set<Entity2D> toReturn = new LinkedHashSet<>();
-        for (Entity2D p: particles){
-            toReturn.add(p.getNewPositionVotante(deltaTime,eta,random));
+        Set<T> toReturn = new LinkedHashSet<>();
+        for (T p : particles) {
+            @SuppressWarnings("unchecked")
+            T next = (T) p.getNewPositionVotante(deltaTime, eta, random);
+            toReturn.add(next);
         }
         return toReturn;
     }
 
-    public float getPolarization(Collection<Entity2D> particles) {
+    public float getPolarization(Collection<? extends Entity2D> particles) {
         double sumX = 0;
         double sumY = 0;
 
@@ -53,7 +59,7 @@ public class OffLatticeService {
 
 
 
-    public Set<Set<Entity2D>> getClusters(Collection<Entity2D> particles) {
+    public Set<Set<Entity2D>> getClusters(Collection<? extends Entity2D> particles) {
 
         Set<Set<Entity2D>> clusters = new HashSet<>();
         Set<Entity2D> visited = new HashSet<>();

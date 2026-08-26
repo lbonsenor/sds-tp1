@@ -10,15 +10,15 @@ public class RandomParticleGenerator {
     private static final int MAX_ATTEMPTS_PER_PARTICLE = 10_000;
     private static final float V_MODULE = (float) 0.03;
 
-    public static Set<Entity2D> generate(int n, float l, float rMin, float rMax, int seed) {
-        Set<Entity2D> particles = new HashSet<>();
+    public static Set<SizedParticle> generate(int n, float l, float rMin, float rMax, int seed) {
+        Set<SizedParticle> particles = new HashSet<>();
 
         // Cell size >= 2 * rMax guarantees checking only the 3x3 neighboring cells is sufficient
         float cellSize = 2 * rMax;
         int gridDim = Math.max(1, (int) Math.ceil(l / cellSize));
 
         @SuppressWarnings("unchecked")
-        List<Entity2D>[][] grid = new List[gridDim][gridDim];
+        List<SizedParticle>[][] grid = new List[gridDim][gridDim];
         for (int i = 0; i < gridDim; i++) {
             for (int j = 0; j < gridDim; j++) {
                 grid[i][j] = new ArrayList<>();
@@ -63,7 +63,7 @@ public class RandomParticleGenerator {
         return particles;
     }
 
-    private static boolean hasCollisionGrid(Entity2D p, List<Entity2D>[][] grid, int cellX, int cellY, int gridDim) {
+    private static boolean hasCollisionGrid(Entity2D p, List<SizedParticle>[][] grid, int cellX, int cellY, int gridDim) {
         int minX = Math.max(0, cellX - 1);
         int maxX = Math.min(gridDim - 1, cellX + 1);
         int minY = Math.max(0, cellY - 1);

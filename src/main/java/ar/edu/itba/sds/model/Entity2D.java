@@ -23,6 +23,6 @@ public interface Entity2D {
     float getAngle();
 
     Entity2D getNewPositionVotante(float deltaTime, float eta, Random random);
-
     Entity2D getNewPositionStandard(float deltaTime, float eta, Random random);
+
 }

@@ -16,7 +16,6 @@ import picocli.CommandLine.Option;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashSet;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -74,12 +73,10 @@ public class ArgsParser implements Runnable {
 
     @Override
     public void run() {
-        // Calculate default m if user didn't specify -m
         if (m == null) {
             m = (int) Math.floor(l / (rc + 2 * riMax));
         }
 
-        // Generate timestamp-based run ID (e.g., 20260826_210646_123)
         final String runId = RUN_ID_FORMATTER.format(Instant.now());
         final Random random = new Random(seed);
 
@@ -97,12 +94,8 @@ public class ArgsParser implements Runnable {
         System.out.println("m: " + m);
         System.out.println("r: " + rc);
 
-        // 2. Compute neighbors
-        final CellIndexService<Entity2D> service = new CellIndexService<>(m, l, rc, particles);
+        final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
         final OffLatticeService offLatticeService = new OffLatticeService();
-
-        //S is the biggest cluster in the network
-        Set<Entity2D> s = new HashSet<>();
 
         // Telemetry collectors
         List<ExecutionTime> executionTimes = new ArrayList<>();
@@ -118,8 +111,9 @@ public class ArgsParser implements Runnable {
             service.calculateNeighbors(contour, particles);
             Instant end = Instant.now();
 
-            long executionTimeMs = Duration.between(start, end).toMillis();
-            System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ms");
+            long executionTimeMs = Duration.between(start, end).toNanos();
+            double executionTimeSec = executionTimeMs / 1000.0;
+            System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ns");
 
             executionTimes.add(new ExecutionTime(
                     model, config.getDensity(), n, "CIM", executionTimeSec, config.getNSteps(), l, rc
@@ -138,11 +132,6 @@ public class ArgsParser implements Runnable {
                         .map(neighbor -> String.valueOf(particleList.indexOf(neighbor)))
                         .collect(Collectors.joining(" "));
 
-//             4. Print results
-            for (Entity2D p : particles) {
-                System.out.println("Particle: " + p);
-                System.out.println("Neighbors: " + p.getNeighbors().size());
-            }
                 if (neighborsStr.isEmpty()) {
                     neighborsStr = "none";
                 } else {
@@ -155,37 +144,27 @@ public class ArgsParser implements Runnable {
 
             // Calculate Observables & Clusters
             double va = offLatticeService.getPolarization(particles);
-            Set<Set<SizedParticle>> clusters = offLatticeService.getClusters(particles);
+            Set<Set<Entity2D>> clusters = offLatticeService.getClusters(particles);
 
             int maxClusterSize = 0;
             int clusterId = 0;
+            Set<Entity2D> biggestCluster = Set.of();
 
-            for (Set<SizedParticle> cluster : clusters) {
+            for (Set<Entity2D> cluster : clusters) {
                 int clusterSize = cluster.size();
                 if (clusterSize > maxClusterSize) {
                     maxClusterSize = clusterSize;
+                    biggestCluster = cluster;
                 }
                 clusterDetails.add(new ClusterDetail(runId, t, clusterId++, clusterSize));
-            // 5. Print clusters
-            Set<Set<Entity2D>> clusters = offLatticeService.getClusters(particles);
-
-
-
-            int counter = 0;
-            for (Set<Entity2D> cluster : clusters) {
-                //System.out.println("cluster " + counter + ": " + cluster.size());
-                if (cluster.size() > s.size()) {
-                    s = cluster;
-                }
-                counter++;
             }
-            System.out.println("Biggest Cluster size: " + s.size());
-            System.out.println("Biggest cluster: " + s);
 
+            System.out.println("Biggest Cluster size: " + maxClusterSize);
+            System.out.println("Biggest cluster: " + biggestCluster);
 
-            double s = (double) maxClusterSize / n;
+            double clusterRatio = (double) maxClusterSize / n;
             timeObservables.add(new TimeObservable(
-                    runId, model != null ? model.name() : "STANDARD", config.getDensity(), eta, t, va, s, maxClusterSize
+                    runId, model != null ? model.name() : "STANDARD", config.getDensity(), eta, t, va, clusterRatio, maxClusterSize
             ));
 
             // Advance system
