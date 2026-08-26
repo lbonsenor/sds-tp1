@@ -77,7 +77,7 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         }
         Random random = new Random(seed);
         float deltaTheta = (random.nextFloat() - 0.5f) * eta;
-        float newAngle = (float) Math.toDegrees(Math.atan2(radius_sin_accum/count,radius_cos_accum/count))+deltaTheta;
+        float newAngle = (float)(Math.atan2(radius_sin_accum/count,radius_cos_accum/count))+deltaTheta;
 
         return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
     }

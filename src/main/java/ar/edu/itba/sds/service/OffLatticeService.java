@@ -27,6 +27,26 @@ public class OffLatticeService <T extends SizedParticle> {
         return toReturn;
     }
 
+    public float getPolarization(Collection<T> particles) {
+        double sumX = 0;
+        double sumY = 0;
+
+        for (SizedParticle particle : particles) {
+            double angle = particle.getAngle();
+
+            sumX += Math.cos(angle);
+            sumY += Math.sin(angle);
+        }
+
+        double polarizationX = sumX / particles.size();
+        double polarizationY = sumY / particles.size();
+
+        return (float) Math.sqrt(
+                polarizationX * polarizationX +
+                        polarizationY * polarizationY
+        );
+    }
+
     public Set<Set<SizedParticle>> getClusters(Collection<T> particles) {
 
         Set<Set<SizedParticle>> clusters = new HashSet<>();

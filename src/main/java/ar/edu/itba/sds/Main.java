@@ -62,6 +62,8 @@ public class Main {
                 System.out.println("Neighbors: " + p.getNeighbors());
             }
 
+            System.out.println("Polarization: "+offLatticeService.getPolarization(particles));
+
             // 5. Print clusters
             Set<Set<SizedParticle>> clusters = offLatticeService.getClusters(particles);
             int counter = 0;
