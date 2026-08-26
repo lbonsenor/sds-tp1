@@ -22,7 +22,7 @@ public class TimeObservable {
     @CsvBindByName(column = "va")
     private double va; // instantaneous polarization
 
-    @CsvBindByName(column = "s")
+    @CsvBindByName(column = "cluster_ratio")
     private double s; // fraction of particles in the largest cluster
 
     @CsvBindByName(column = "max_cluster_size")
