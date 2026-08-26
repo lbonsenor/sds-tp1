@@ -9,12 +9,17 @@ import ar.edu.itba.sds.utils.RandomParticleGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 public class StressTest {
+    private static final DateTimeFormatter RUN_ID_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").withZone(ZoneOffset.UTC);
 
     private static final float L = 20f;
     private static final float RI_MIN = 0.23f;
@@ -55,6 +60,7 @@ public class StressTest {
     @Test
     @DisplayName("Stress Test: Variation of M (Section 3)")
     void testVariationOfM() {
+        final String runId = RUN_ID_FORMATTER.format(Instant.now());
 
         Random random = new Random(SEED);
 
@@ -79,7 +85,7 @@ public class StressTest {
                 double density = n / (double) (L * L);
                 double meanSec = result.mean / 1000.0;
 
-                telemetryList.add(new ExecutionTime(
+                telemetryList.add(new ExecutionTime(runId,
                         FlockingModel.STANDARD, density, n, "CIM_M" + m,
                         meanSec, BENCHMARK_ITERATIONS, L, RC
                 ));
@@ -98,6 +104,8 @@ public class StressTest {
     @Test
     @DisplayName("Stress Test: Variation of N - Free Density (Section 4.1)")
     void testVariationOfNFreeDensity() {
+        final String runId = RUN_ID_FORMATTER.format(Instant.now());
+
         int optimalM = (int) Math.floor(L / (RC + 2 * RI_MAX));
         int maxN = findMaxFeasibleN(L);
 
@@ -118,7 +126,7 @@ public class StressTest {
             double density = n / (double) (L * L);
             double meanSec = result.mean / 1000.0;
 
-            telemetryList.add(new ExecutionTime(
+            telemetryList.add(new ExecutionTime(runId,
                     FlockingModel.STANDARD, density, n, "CIM",
                     meanSec, BENCHMARK_ITERATIONS, L, RC
             ));
@@ -136,6 +144,8 @@ public class StressTest {
     @Test
     @DisplayName("Stress Test: Variation of N - Fixed Density (Section 4.2)")
     void testVariationOfNFixedDensity() {
+        final String runId = RUN_ID_FORMATTER.format(Instant.now());
+
         int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
 
         Random random = new Random(SEED);
@@ -156,7 +166,7 @@ public class StressTest {
 
             double meanSec = result.mean / 1000.0;
 
-            telemetryList.add(new ExecutionTime(
+            telemetryList.add(new ExecutionTime(runId,
                     FlockingModel.STANDARD, actualDensity, n, "CIM",
                     meanSec, BENCHMARK_ITERATIONS, l, RC
             ));
@@ -174,6 +184,8 @@ public class StressTest {
     @Test
     @DisplayName("Stress Test: Variation of N - Free Density Brute Force (Section 4.1)")
     void testVariationOfNFreeDensityBruteForce() {
+        final String runId = RUN_ID_FORMATTER.format(Instant.now());
+
         int optimalM = 1;
         int maxN = findMaxFeasibleN(L);
 
@@ -194,7 +206,7 @@ public class StressTest {
             double density = n / (double) (L * L);
             double meanSec = result.mean / 1000.0;
 
-            telemetryList.add(new ExecutionTime(
+            telemetryList.add(new ExecutionTime(runId,
                     FlockingModel.STANDARD, density, n, "brute_force",
                     meanSec, BENCHMARK_ITERATIONS, L, RC
             ));
@@ -212,6 +224,7 @@ public class StressTest {
     @Test
     @DisplayName("Stress Test: Variation of N - Fixed Density Brute Force (Section 4.2)")
     void testVariationOfNFixedDensityBruteForce() {
+        final String runId = RUN_ID_FORMATTER.format(Instant.now());
         int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
 
         Random random = new Random(SEED);
@@ -232,7 +245,7 @@ public class StressTest {
 
             double meanSec = result.mean / 1000.0;
 
-            telemetryList.add(new ExecutionTime(
+            telemetryList.add(new ExecutionTime(runId,
                     FlockingModel.STANDARD, actualDensity, n, "brute_force",
                     meanSec, BENCHMARK_ITERATIONS, l, RC
             ));

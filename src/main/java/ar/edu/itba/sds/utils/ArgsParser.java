@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class ArgsParser implements Runnable {
 
     private static final DateTimeFormatter RUN_ID_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS").withZone(ZoneOffset.UTC);
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss").withZone(ZoneOffset.UTC);
 
     @Option(names = {"-l", "--length"}, description = "Grid length", defaultValue = "20")
     private int l;
