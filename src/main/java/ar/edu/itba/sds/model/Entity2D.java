@@ -1,7 +1,5 @@
 package ar.edu.itba.sds.model;
 
-import ar.edu.itba.sds.model.entities.Cell;
-
 import java.util.Optional;
 import java.util.Set;
 
@@ -16,5 +14,4 @@ public interface Entity2D<T extends Entity2D<T>> {
     float getMaxY();
 
     Set<T> getNeighbors();
-    Set<Cell<T>> getCells();
 }

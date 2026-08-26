@@ -12,7 +12,6 @@ public class Particle implements Entity2D<Particle> {
     private final float y;
 
     private final Set<Particle> neighbors = new HashSet<>();
-    private final Set<Cell<Particle>> cells = new HashSet<>();
 
 
     public Particle(float x, float y) {
@@ -68,11 +67,6 @@ public class Particle implements Entity2D<Particle> {
     @Override
     public Set<Particle> getNeighbors() {
         return neighbors;
-    }
-
-    @Override
-    public Set<Cell<Particle>> getCells() {
-        return cells;
     }
 
     @Override

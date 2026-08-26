@@ -12,7 +12,6 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     private final float angle;
 
     private final Set<SizedParticle> neighbors = new HashSet<>();
-    private final Set<Cell<SizedParticle>> cells = new HashSet<>();
 
     public SizedParticle(float x, float y, float r, float v, float angle) {
         if (x-r < 0 || y-r < 0) throw new IllegalArgumentException();
@@ -127,11 +126,6 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     @Override
     public Set<SizedParticle> getNeighbors() {
         return neighbors;
-    }
-
-    @Override
-    public Set<Cell<SizedParticle>> getCells() {
-        return cells;
     }
 
     @Override
