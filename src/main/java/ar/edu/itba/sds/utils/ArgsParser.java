@@ -19,7 +19,10 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -111,15 +114,21 @@ public class ArgsParser implements Runnable {
             service.calculateNeighbors(contour, particles);
             Instant end = Instant.now();
 
-            long executionTimeMs = Duration.between(start, end).toNanos();
-            double executionTimeSec = executionTimeMs / 1000.0;
-            System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ns");
+            long executionTimeNs = Duration.between(start, end).toNanos();
+            double executionTimeSec = executionTimeNs / 1_000_000_000.0;
+            System.out.println("Time taken to calculate neighbors: " + executionTimeNs + " ns");
 
             executionTimes.add(new ExecutionTime(
                     model, config.getDensity(), n, "CIM", executionTimeSec, config.getNSteps(), l, rc
             ));
 
             List<SizedParticle> particleList = new ArrayList<>(particles);
+
+            // Fast O(1) index map to replace indexOf lookups
+            Map<Entity2D, Integer> particleIndices = new HashMap<>();
+            for (int i = 0; i < particleList.size(); i++) {
+                particleIndices.put(particleList.get(i), i);
+            }
 
             // Collect Particle Data & Trajectories
             for (int i = 0; i < particleList.size(); i++) {
@@ -129,7 +138,9 @@ public class ArgsParser implements Runnable {
                 double radius = (p.getMaxX() - p.getMinX()) / 2.0;
 
                 String neighborsStr = p.getNeighbors().stream()
-                        .map(neighbor -> String.valueOf(particleList.indexOf(neighbor)))
+                        .map(particleIndices::get)
+                        .filter(Objects::nonNull)
+                        .map(String::valueOf)
                         .collect(Collectors.joining(" "));
 
                 if (neighborsStr.isEmpty()) {
