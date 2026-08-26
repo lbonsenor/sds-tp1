@@ -1,6 +1,9 @@
 out/*
 telemetry/*
 figuresNoContour/*
+*.png
+*.csv
+*.gif
 
 target/
 !.mvn/wrapper/maven-wrapper.jar
