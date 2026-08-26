@@ -1,5 +1,6 @@
 package ar.edu.itba.sds.utils;
 
+import ar.edu.itba.sds.model.Entity2D;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 import ar.edu.itba.sds.model.flocking.FlockingModel;
 import ar.edu.itba.sds.model.telemetry.ClusterDetail;
@@ -15,6 +16,7 @@ import picocli.CommandLine.Option;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -72,6 +74,7 @@ public class ArgsParser implements Runnable {
 
     @Override
     public void run() {
+        // Calculate default m if user didn't specify -m
         if (m == null) {
             m = (int) Math.floor(l / (rc + 2 * riMax));
         }
@@ -94,8 +97,12 @@ public class ArgsParser implements Runnable {
         System.out.println("m: " + m);
         System.out.println("r: " + rc);
 
-        final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
-        final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>();
+        // 2. Compute neighbors
+        final CellIndexService<Entity2D> service = new CellIndexService<>(m, l, rc, particles);
+        final OffLatticeService offLatticeService = new OffLatticeService();
+
+        //S is the biggest cluster in the network
+        Set<Entity2D> s = new HashSet<>();
 
         // Telemetry collectors
         List<ExecutionTime> executionTimes = new ArrayList<>();
@@ -112,7 +119,6 @@ public class ArgsParser implements Runnable {
             Instant end = Instant.now();
 
             long executionTimeMs = Duration.between(start, end).toMillis();
-            double executionTimeSec = executionTimeMs / 1000.0;
             System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ms");
 
             executionTimes.add(new ExecutionTime(
@@ -132,6 +138,11 @@ public class ArgsParser implements Runnable {
                         .map(neighbor -> String.valueOf(particleList.indexOf(neighbor)))
                         .collect(Collectors.joining(" "));
 
+//             4. Print results
+            for (Entity2D p : particles) {
+                System.out.println("Particle: " + p);
+                System.out.println("Neighbors: " + p.getNeighbors().size());
+            }
                 if (neighborsStr.isEmpty()) {
                     neighborsStr = "none";
                 } else {
@@ -155,7 +166,22 @@ public class ArgsParser implements Runnable {
                     maxClusterSize = clusterSize;
                 }
                 clusterDetails.add(new ClusterDetail(runId, t, clusterId++, clusterSize));
+            // 5. Print clusters
+            Set<Set<Entity2D>> clusters = offLatticeService.getClusters(particles);
+
+
+
+            int counter = 0;
+            for (Set<Entity2D> cluster : clusters) {
+                //System.out.println("cluster " + counter + ": " + cluster.size());
+                if (cluster.size() > s.size()) {
+                    s = cluster;
+                }
+                counter++;
             }
+            System.out.println("Biggest Cluster size: " + s.size());
+            System.out.println("Biggest cluster: " + s);
+
 
             double s = (double) maxClusterSize / n;
             timeObservables.add(new TimeObservable(

@@ -1,37 +1,38 @@
 package ar.edu.itba.sds.service;
 
+import ar.edu.itba.sds.model.Entity2D;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 
 import java.util.*;
 
-public class OffLatticeService <T extends SizedParticle> {
+public class OffLatticeService {
 
     public OffLatticeService() {
     }
 
-    public Set<SizedParticle> getNewStandardListOfParticles(float deltaTime, float eta, Random random, Collection<T> particles){
+    public Set<Entity2D> getNewStandardListOfParticles(float deltaTime, float eta, Random random, Collection<Entity2D> particles){
 
-        Set<SizedParticle> toReturn = new LinkedHashSet<>();
-        for (SizedParticle p: particles){
+        Set<Entity2D> toReturn = new LinkedHashSet<>();
+        for (Entity2D p: particles){
             toReturn.add(p.getNewPositionStandard(deltaTime,eta,random));
         }
         return toReturn;
     }
 
-    public Set<SizedParticle> getNewVotanteListOfParticles(float deltaTime,  float eta, Random random,Collection<T> particles){
+    public Set<Entity2D> getNewVotanteListOfParticles(float deltaTime,  float eta, Random random,Collection<Entity2D> particles){
 
-        Set<SizedParticle> toReturn = new LinkedHashSet<>();
-        for (SizedParticle p: particles){
+        Set<Entity2D> toReturn = new LinkedHashSet<>();
+        for (Entity2D p: particles){
             toReturn.add(p.getNewPositionVotante(deltaTime,eta,random));
         }
         return toReturn;
     }
 
-    public float getPolarization(Collection<T> particles) {
+    public float getPolarization(Collection<Entity2D> particles) {
         double sumX = 0;
         double sumY = 0;
 
-        for (SizedParticle particle : particles) {
+        for (Entity2D particle : particles) {
             double angle = particle.getAngle();
 
             sumX += Math.cos(angle);
@@ -47,29 +48,34 @@ public class OffLatticeService <T extends SizedParticle> {
         );
     }
 
-    public Set<Set<SizedParticle>> getClusters(Collection<T> particles) {
 
-        Set<Set<SizedParticle>> clusters = new HashSet<>();
-        Set<SizedParticle> visited = new HashSet<>();
 
-        for (SizedParticle particle : particles) {
+
+
+
+    public Set<Set<Entity2D>> getClusters(Collection<Entity2D> particles) {
+
+        Set<Set<Entity2D>> clusters = new HashSet<>();
+        Set<Entity2D> visited = new HashSet<>();
+
+        for (Entity2D particle : particles) {
 
             if (visited.contains(particle)) {
                 continue;
             }
 
-            Set<SizedParticle> cluster = new HashSet<>();
-            Queue<SizedParticle> queue = new LinkedList<>();
+            Set<Entity2D> cluster = new HashSet<>();
+            Queue<Entity2D> queue = new LinkedList<>();
 
             queue.add(particle);
             visited.add(particle);
 
             while (!queue.isEmpty()) {
 
-                SizedParticle current = queue.poll();
+                Entity2D current = queue.poll();
                 cluster.add(current);
 
-                for (SizedParticle neighbor : current.getNeighbors()) {
+                for (Entity2D neighbor : current.getNeighbors()) {
 
                     if (!visited.contains(neighbor)) {
                         visited.add(neighbor);
