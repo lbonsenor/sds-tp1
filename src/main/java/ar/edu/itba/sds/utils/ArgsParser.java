@@ -1,147 +1,122 @@
 package ar.edu.itba.sds.utils;
 
-public class ArgsParser {
-    int l = 20;
-    float rc = 3;
-    float riMin = 0.23f;
-    float riMax = 0.26f;
-    int m = (int) Math.floor(l / (rc + 2 * riMax));
-    int n = 7;
-    boolean contour = false;
-    boolean hasM = false;
+import ar.edu.itba.sds.model.entities.SizedParticle;
+import ar.edu.itba.sds.service.CellIndexService;
+import ar.edu.itba.sds.service.OffLatticeService;
+import picocli.CommandLine;
+import picocli.CommandLine.Option;
 
-    float deltaT = 0.5f;
-    float entireT = 5f;
-    float eta = 2f;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Random;
+import java.util.Set;
 
+@CommandLine.Command(
+        name = "sds-simulation",
+        mixinStandardHelpOptions = true, // Adds -h, --help, -V, --version automatically
+        version = "1.0.0",
+        description = "Off-lattice particle simulation runner"
+)
+public class ArgsParser implements Runnable {
 
-    public ArgsParser(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-        switch (args[i]) {
-            case "-l":
-            case "--length":
-                if (i + 1 < args.length) {
-                    try {
-                        l = Integer.parseInt(args[++i]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Length must be a valid integer.");
-                        System.exit(1);
-                    }
-                }
-                break;
-            case "-rc":
-            case "--cut-off":
-                if (i + 1 < args.length) {
-                    try {
-                        rc = Float.parseFloat(args[++i]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Cut-off must be a valid float.");
-                        System.exit(1);
-                    }
-                }
-                break;
-            case "-ri-min":
-            case "--min-radius":
-                if (i + 1 < args.length) {
-                    try {
-                        riMin = Float.parseFloat(args[++i]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Min radius must be a valid float.");
-                        System.exit(1);
-                    }
-                }
-                break;
-            case "-ri-max":
-            case "--max-radius":
-                if (i + 1 < args.length) {
-                    try {
-                        riMax = Float.parseFloat(args[++i]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: Max radius must be a valid float.");
-                        System.exit(1);
-                    }
-                }
-                break;
-            case "-m":
-                if (i + 1 < args.length) {
-                    try {
-                        m = Integer.parseInt(args[++i]);
-                        hasM = true;
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: m must be a valid integer.");
-                        System.exit(1);
-                    }
-                }
-                break;
-            case "-n":
-                if (i + 1 < args.length) {
-                    try {
-                        n = Integer.parseInt(args[++i]);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Error: n must be a valid integer.");
-                        System.exit(1);
-                    }
-                }
-                break;
-             case "-c":
-             case "--contour":
-                 if (i + 1 < args.length) {
-                    contour = Boolean.parseBoolean(args[++i]);
-                 }
-                 break;
-            }
-        }
-        if(!hasM) {
+    @Option(names = {"-l", "--length"}, description = "Grid length", defaultValue = "20")
+    private int l = 20;
+
+    @Option(names = {"-rc", "--cut-off"}, description = "Cut-off distance", defaultValue = "3.0")
+    private float rc = 3.0f;
+
+    @Option(names = {"-ri-min", "--min-radius"}, description = "Minimum radius", defaultValue = "0.23")
+    private float riMin = 0.23f;
+
+    @Option(names = {"-ri-max", "--max-radius"}, description = "Maximum radius", defaultValue = "0.26")
+    private float riMax = 0.26f;
+
+    @Option(names = {"-m"}, description = "Cell grid split factor")
+    private Integer m; // Nullable so we can detect if passed explicitly
+
+    @Option(names = {"-n"}, description = "Number of particles", defaultValue = "7")
+    private int n = 7;
+
+    @Option(names = {"-c", "--contour"}, description = "Enable contour (periodic boundary conditions)")
+    private boolean contour = false;
+
+    @Option(names = {"--delta-t"}, description = "Delta time step", defaultValue = "0.5")
+    private float deltaT = 0.5f;
+
+    @Option(names = {"--entire-t"}, description = "Total execution time", defaultValue = "5.0")
+    private float entireT = 5.0f;
+
+    @Option(names = {"--eta"}, description = "Noise parameter eta", defaultValue = "2.0")
+    private float eta = 2.0f;
+
+    @Override
+    public void run() {
+        // Calculate default m if user didn't specify -m
+        if (m == null) {
             m = (int) Math.floor(l / (rc + 2 * riMax));
         }
+
+        final Random random = new Random();
+
+        // 1. Generate particles
+        Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, riMin, riMax, random.nextInt());
+
+        System.out.println("N particles: " + particles.size());
+        System.out.println("Grid size: " + l + " x " + l);
+        System.out.println("m: " + m);
+        System.out.println("r: " + rc);
+
+        // 2. Compute neighbors
+        final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
+        final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>();
+
+        for (float t = 0; t < entireT; t += deltaT) {
+
+            Instant start = Instant.now();
+            service.calculateNeighbors(contour);
+            Instant end = Instant.now();
+
+            long executionTimeMs = Duration.between(start, end).toMillis();
+            System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ms");
+
+            // 3. Export data
+            CsvExporter.exportExecutionTelemetry(n, l, m, rc, riMin, riMax, executionTimeMs);
+            CsvExporter.exportParticleData(particles, 0);
+
+            // 4. Print results
+            for (SizedParticle p : particles) {
+                System.out.println("Particle: " + p);
+                System.out.println("Neighbors: " + p.getNeighbors());
+            }
+
+            System.out.println("Polarization: " + offLatticeService.getPolarization(particles));
+
+            // 5. Print clusters
+            Set<Set<SizedParticle>> clusters = offLatticeService.getClusters(particles);
+            int counter = 0;
+            for (Set<SizedParticle> cluster : clusters) {
+                System.out.println("cluster " + counter + ": " + cluster);
+                counter++;
+            }
+
+            particles = offLatticeService.getNewStandardListOfParticles(deltaT, eta, random.hashCode(), particles);
+        }
     }
 
-
-    public int getN(){
-        return n;
-    }
-
-
-    public int getL() {
-        return l;
-    }
-
-
-
-    public float getRc() {
-        return rc;
-    }
-
-
-    public float getRiMin() {
-        return riMin;
-    }
-
-
-
-    public float getRiMax() {
-        return riMax;
-    }
-
-
+    // Getters
+    public int getL() { return l; }
+    public float getRc() { return rc; }
+    public float getRiMin() { return riMin; }
+    public float getRiMax() { return riMax; }
     public int getM() {
+        if (m == null) {
+            return (int) Math.floor(l / (rc + 2 * riMax));
+        }
         return m;
     }
-
-    public boolean hasContour() {
-        return contour;
-    }
-
-    public float getDeltaT(){
-        return deltaT;
-    }
-
-    public float getEntireT(){
-        return entireT;
-    }
-
-    public float getEta(){
-        return eta;
-    }
-
+    public int getN() { return n; }
+    public boolean hasContour() { return contour; }
+    public float getDeltaT() { return deltaT; }
+    public float getEntireT() { return entireT; }
+    public float getEta() { return eta; }
 }
