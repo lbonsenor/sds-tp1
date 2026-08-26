@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class CellIndexService<T extends Entity2D<T>> {
+public class CellIndexService<T extends Entity2D> {
 
     private final int M;
     private final float L;
@@ -52,6 +52,7 @@ public class CellIndexService<T extends Entity2D<T>> {
                 grid[i][j] = new ArrayList<>();
             }
         }
+
     }
 
 
@@ -116,6 +117,13 @@ public class CellIndexService<T extends Entity2D<T>> {
 
     private void CalculateCells(Collection<T> particles) {
         // Assign particles to cells
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < M; j++) {
+                grid[i][j] = new ArrayList<>();
+            }
+        }
+
+
         for (T particle : particles) {
             float x = (particle.getMaxX() + particle.getMinX()) * 0.5f;
             float y = (particle.getMaxY() + particle.getMinY()) * 0.5f;

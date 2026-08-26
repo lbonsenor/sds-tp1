@@ -1,5 +1,6 @@
 package ar.edu.itba.sds.utils;
 
+import ar.edu.itba.sds.model.Entity2D;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.service.OffLatticeService;
@@ -8,6 +9,7 @@ import picocli.CommandLine.Option;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
@@ -62,7 +64,7 @@ public class ArgsParser implements Runnable {
         final Random random = new Random(seed);
 
         // 1. Generate particles
-        Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, riMin, riMax, random.nextInt());
+        Set<Entity2D> particles = RandomParticleGenerator.generate(n, l, riMin, riMax, random.nextInt());
 
         System.out.println("N particles: " + particles.size());
         System.out.println("Grid size: " + l + " x " + l);
@@ -70,8 +72,11 @@ public class ArgsParser implements Runnable {
         System.out.println("r: " + rc);
 
         // 2. Compute neighbors
-        final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
-        final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>();
+        final CellIndexService<Entity2D> service = new CellIndexService<>(m, l, rc, particles);
+        final OffLatticeService offLatticeService = new OffLatticeService();
+
+        //S is the biggest cluster in the network
+        Set<Entity2D> s = new HashSet<>();
 
         for (float t = 0; t < entireT; t += deltaT) {
 
@@ -86,21 +91,30 @@ public class ArgsParser implements Runnable {
             CsvExporter.exportExecutionTelemetry(n, l, m, rc, riMin, riMax, executionTimeMs);
             CsvExporter.exportParticleData(particles, 0);
 
-            // 4. Print results
-            for (SizedParticle p : particles) {
+//             4. Print results
+            for (Entity2D p : particles) {
                 System.out.println("Particle: " + p);
-                System.out.println("Neighbors: " + p.getNeighbors());
+                System.out.println("Neighbors: " + p.getNeighbors().size());
             }
 
             System.out.println("Polarization: " + offLatticeService.getPolarization(particles));
 
             // 5. Print clusters
-            Set<Set<SizedParticle>> clusters = offLatticeService.getClusters(particles);
+            Set<Set<Entity2D>> clusters = offLatticeService.getClusters(particles);
+
+
+
             int counter = 0;
-            for (Set<SizedParticle> cluster : clusters) {
-                System.out.println("cluster " + counter + ": " + cluster);
+            for (Set<Entity2D> cluster : clusters) {
+                //System.out.println("cluster " + counter + ": " + cluster.size());
+                if (cluster.size() > s.size()) {
+                    s = cluster;
+                }
                 counter++;
             }
+            System.out.println("Biggest Cluster size: " + s.size());
+            System.out.println("Biggest cluster: " + s);
+
 
             particles = offLatticeService.getNewStandardListOfParticles(deltaT, eta, random, particles);
         }

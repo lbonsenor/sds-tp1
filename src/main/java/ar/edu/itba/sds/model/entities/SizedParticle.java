@@ -4,14 +4,14 @@ import ar.edu.itba.sds.model.Entity2D;
 
 import java.util.*;
 
-public class SizedParticle implements Entity2D<SizedParticle> {
+public class SizedParticle implements Entity2D {
     private final float x;
     private final float y;
     private final float r;
     private final float v;
     private final float angle;
 
-    private final Set<SizedParticle> neighbors = new HashSet<>();
+    private final Set<Entity2D> neighbors = new HashSet<>();
 
     public SizedParticle(float x, float y, float r, float v, float angle) {
         if (x-r < 0 || y-r < 0) throw new IllegalArgumentException();
@@ -23,9 +23,9 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     }
 
     @Override
-    public float euclideanDistance(SizedParticle other, Optional<Float> contour) {
-        float dx = Math.abs(this.x - other.x);
-        float dy = Math.abs(this.y - other.y);
+    public float euclideanDistance(Entity2D other, Optional<Float> contour) {
+        float dx = Math.abs(this.x - other.getX());
+        float dy = Math.abs(this.y - other.getY());
 
         if (contour.isPresent()) {
             float L = contour.get();
@@ -33,17 +33,17 @@ public class SizedParticle implements Entity2D<SizedParticle> {
             dy = Math.min(dy, L - dy);
         }
 
-        return (float) Math.sqrt(dx * dx + dy * dy) - (this.r + other.r);
+        return (float) Math.sqrt(dx * dx + dy * dy) - (this.r + other.getR());
     }
 
     @Override
-    public boolean collidesWith(SizedParticle other) {
-        float dx = this.x - other.x;
-        float dy = this.y - other.y;
+    public boolean collidesWith(Entity2D other) {
+        float dx = this.x - other.getX();
+        float dy = this.y - other.getY();
         float centerDistance = (float) Math.sqrt(dx * dx + dy * dy);
 
         // Collides if distance between centers is less than or equal to sum of radii
-        return (centerDistance - (this.r + other.r)) <= 0;
+        return (centerDistance - (this.r + other.getR())) <= 0;
     }
 
     @Override
@@ -69,10 +69,10 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         float radius_cos_accum = (float) Math.cos(angle);
         int count = 1;
 
-        for (SizedParticle p : neighbors){
+        for (Entity2D p : neighbors){
             // if collidesWith este paso podria ser innecesario. Evaluar eso.
-                radius_cos_accum = (float) (radius_cos_accum + Math.cos(p.angle));
-                radius_sin_accum = (float) (radius_sin_accum + Math.sin(p.angle));
+                radius_cos_accum = (float) (radius_cos_accum + Math.cos(p.getAngle()));
+                radius_sin_accum = (float) (radius_sin_accum + Math.sin(p.getAngle()));
                 count++;
         }
         float deltaTheta = (random.nextFloat() - 0.5f) * eta;
@@ -117,6 +117,16 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         return y+r;
     }
 
+    @Override
+    public float getR() {return r;}
+
+    @Override
+    public float getX() {return x;}
+
+    @Override
+    public float getY() {return y;}
+
+    @Override
     public float getAngle() {
         return angle;
     }
@@ -126,7 +136,7 @@ public class SizedParticle implements Entity2D<SizedParticle> {
     }
 
     @Override
-    public Set<SizedParticle> getNeighbors() {
+    public Set<Entity2D> getNeighbors() {
         return neighbors;
     }
 

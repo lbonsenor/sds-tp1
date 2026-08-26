@@ -1,5 +1,6 @@
 package ar.edu.itba.sds;
 
+import ar.edu.itba.sds.model.Entity2D;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.utils.CsvExporter;
@@ -61,12 +62,12 @@ public class StressTest {
         int maxM = (int) Math.floor(L / maxCellSizeLimit);
 
         for (int n : nValues) {
-            Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
+            Set<Entity2D> particles = generateParticles(n, L, random.nextInt());
 
             globalJitWarmup(L, particles);
 
             for (int m = 1; m <= maxM; m++) {
-                CellIndexService<SizedParticle> service = new CellIndexService<>(m, L, RC, particles);
+                CellIndexService<Entity2D> service = new CellIndexService<Entity2D>(m, L, RC, particles);
 
                 BenchmarkResult result = runBenchmark(service, particles);
 
@@ -94,11 +95,11 @@ public class StressTest {
         Random random = new Random(SEED);
 
         for (int n : nValues) {
-            Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
+            Set<Entity2D> particles = generateParticles(n, L, random.nextInt());
 
             globalJitWarmup(L, particles);
 
-            CellIndexService<SizedParticle> service = new CellIndexService<>(optimalM, L, RC, particles);
+            CellIndexService<Entity2D> service = new CellIndexService<>(optimalM, L, RC, particles);
 
             BenchmarkResult result = runBenchmark(service, particles);
 
@@ -125,11 +126,11 @@ public class StressTest {
             float actualDensity = (float) n / (l * l);
             int m = (int) Math.floor(l / (RC + 2 * RI_MAX));
 
-            Set<SizedParticle> particles = generateParticles(n, l, random.nextInt());
+            Set<Entity2D> particles = generateParticles(n, l, random.nextInt());
 
             globalJitWarmup(l, particles);
 
-            CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
+            CellIndexService<Entity2D> service = new CellIndexService<>(m, l, RC, particles);
 
             BenchmarkResult result = runBenchmark(service, particles);
 
@@ -156,11 +157,11 @@ public class StressTest {
 
 
         for (int n : nValues) {
-            Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
+            Set<Entity2D> particles = generateParticles(n, L, random.nextInt());
 
             globalJitWarmup(L, particles);
 
-            CellIndexService<SizedParticle> service = new CellIndexService<>(optimalM, L, RC, particles);
+            CellIndexService<Entity2D> service = new CellIndexService<>(optimalM, L, RC, particles);
 
             BenchmarkResult result = runBenchmark(service, particles);
 
@@ -187,11 +188,11 @@ public class StressTest {
             float actualDensity = (float) n / (l * l);
             int m = 1;
 
-            Set<SizedParticle> particles = generateParticles(n, l, random.nextInt());
+            Set<Entity2D> particles = generateParticles(n, l, random.nextInt());
 
             globalJitWarmup(l, particles);
 
-            CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, RC, particles);
+            CellIndexService<Entity2D> service = new CellIndexService<>(m, l, RC, particles);
 
             BenchmarkResult result = runBenchmark(service, particles);
 
@@ -255,7 +256,7 @@ public class StressTest {
     /**
      * Generates {@code n} particles, retrying with fresh random seeds to absorb sampling variance.
      */
-    private Set<SizedParticle> generateParticles(int n, float l, int seed) {
+    private Set<Entity2D> generateParticles(int n, float l, int seed) {
         IllegalStateException lastFailure = null;
         for (int attempt = 0; attempt < 5; attempt++) {
             try {
@@ -271,10 +272,10 @@ public class StressTest {
      * Executes heavy dummy iterations before recording measurements to ensure
      * the JVM JIT compiler fully optimizes and compiles bytecode to machine code.
      */
-    private void globalJitWarmup(float l, Set<SizedParticle> particles) {
-        CellIndexService<SizedParticle> warmupService = new CellIndexService<>(3, l, StressTest.RC, particles);
+    private void globalJitWarmup(float l, Set<Entity2D> particles) {
+        CellIndexService<Entity2D> warmupService = new CellIndexService<>(3, l, StressTest.RC, particles);
         for (int i = 0; i < GLOBAL_WARMUP_RUNS; i++) {
-            for (SizedParticle p : particles) {
+            for (Entity2D p : particles) {
                 p.getNeighbors().clear();
             }
             warmupService.calculateNeighbors(CONTOUR, particles);
@@ -284,13 +285,13 @@ public class StressTest {
     /**
      * Measures precise execution times and returns the Mean and Standard Deviation.
      */
-    private BenchmarkResult runBenchmark(CellIndexService<SizedParticle> service,
-                                         Set<SizedParticle> particles) {
+    private BenchmarkResult runBenchmark(CellIndexService<Entity2D> service,
+                                         Set<Entity2D> particles) {
 
         double[] runTimesMs = new double[BENCHMARK_ITERATIONS];
 
         for (int i = 0; i < BENCHMARK_ITERATIONS; i++) {
-            for (SizedParticle p : particles) {
+            for (Entity2D p : particles) {
                 p.getNeighbors().clear();
             }
 

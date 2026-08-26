@@ -1,14 +1,12 @@
 package ar.edu.itba.sds.model;
 
-import ar.edu.itba.sds.model.entities.SizedParticle;
-
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 
-public interface Entity2D<T extends Entity2D<T>> {
-    float euclideanDistance(T other, Optional<Float> contour);
-    boolean collidesWith(T other);
+public interface Entity2D {
+    float euclideanDistance(Entity2D other, Optional<Float> contour);
+    boolean collidesWith(Entity2D other);
     boolean existsIn(float minX, float minY, float maxX, float maxY);
 
     float getMinX();
@@ -16,7 +14,15 @@ public interface Entity2D<T extends Entity2D<T>> {
     float getMinY();
     float getMaxY();
 
-    Set<T> getNeighbors();
-    T getNewPositionVotante(float deltaTime, float eta, Random random);
-    T getNewPositionStandard(float deltaTime, float eta, Random random);
+    float getR();
+    float getX();
+    float getY();
+
+    Set<Entity2D> getNeighbors();
+
+    float getAngle();
+
+    Entity2D getNewPositionVotante(float deltaTime, float eta, Random random);
+
+    Entity2D getNewPositionStandard(float deltaTime, float eta, Random random);
 }
