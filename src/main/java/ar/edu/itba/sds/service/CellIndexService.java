@@ -1,13 +1,13 @@
 package ar.edu.itba.sds.service;
 
-import ar.edu.itba.sds.model.entities.SizedParticle;
+import ar.edu.itba.sds.model.Entity2D;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class CellIndexService<T extends SizedParticle> {
+public class CellIndexService<T extends Entity2D<T>> {
 
     private final int M;
     private final float L;
