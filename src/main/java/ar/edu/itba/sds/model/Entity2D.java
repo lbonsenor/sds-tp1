@@ -1,6 +1,9 @@
 package ar.edu.itba.sds.model;
 
+import ar.edu.itba.sds.model.entities.SizedParticle;
+
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 public interface Entity2D<T extends Entity2D<T>> {
@@ -14,4 +17,6 @@ public interface Entity2D<T extends Entity2D<T>> {
     float getMaxY();
 
     Set<T> getNeighbors();
+    T getNewPositionVotante(float deltaTime, float eta, Random random);
+    T getNewPositionStandard(float deltaTime, float eta, Random random);
 }

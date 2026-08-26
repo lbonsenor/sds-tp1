@@ -59,6 +59,7 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         return (dx * dx + dy * dy) <= (this.r * this.r);
     }
 
+    @Override
     public SizedParticle getNewPositionStandard(float deltaTime, float eta, Random random) {
 
         float dx = v * (float) Math.cos(angle);
@@ -80,6 +81,7 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
     }
 
+    @Override
     public SizedParticle getNewPositionVotante(float deltaTime, float eta, Random random) {
         float dx = v * (float) Math.cos(angle);
         float dy = v * (float) Math.sin(angle);
