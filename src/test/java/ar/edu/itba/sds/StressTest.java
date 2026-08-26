@@ -1,12 +1,16 @@
 package ar.edu.itba.sds;
 
 import ar.edu.itba.sds.model.entities.SizedParticle;
+import ar.edu.itba.sds.model.flocking.FlockingModel;
+import ar.edu.itba.sds.model.telemetry.ExecutionTime;
 import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.utils.CsvExporter;
 import ar.edu.itba.sds.utils.RandomParticleGenerator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -60,6 +64,8 @@ public class StressTest {
         double maxCellSizeLimit = RC + 2 * RI_MAX;
         int maxM = (int) Math.floor(L / maxCellSizeLimit);
 
+        List<ExecutionTime> telemetryList = new ArrayList<>();
+
         for (int n : nValues) {
             Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
 
@@ -70,13 +76,20 @@ public class StressTest {
 
                 BenchmarkResult result = runBenchmark(service, particles);
 
-                CsvExporter.exportVariationMTelemetry(n, L, RC, RI_MIN, RI_MAX, CONTOUR,
-                        GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, m, result.mean, result.stdDev);
+                double density = n / (double) (L * L);
+                double meanSec = result.mean / 1000.0;
+
+                telemetryList.add(new ExecutionTime(
+                        FlockingModel.STANDARD, density, n, "CIM_M" + m,
+                        meanSec, BENCHMARK_ITERATIONS, L, RC
+                ));
 
                 System.out.printf("[Variation M] N: %d | M: %2d/%d | Mean: %.4f ms | StdDev: %.4f ms%n",
                         n, m, maxM, result.mean, result.stdDev);
             }
         }
+
+        CsvExporter.exportTelemetry(telemetryList, "variation_m_execution_times.csv");
     }
 
     /**
@@ -90,8 +103,8 @@ public class StressTest {
 
         int[] nValues = {10, 50, 100, 200, 300, INTERMEDIATE_N, 500, 600, 700, 800, 900, 1000, maxN};
 
-
         Random random = new Random(SEED);
+        List<ExecutionTime> telemetryList = new ArrayList<>();
 
         for (int n : nValues) {
             Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
@@ -102,12 +115,19 @@ public class StressTest {
 
             BenchmarkResult result = runBenchmark(service, particles);
 
-            CsvExporter.exportVariationNFreeDensityTelemetry(n, L, optimalM, RC, RI_MIN, RI_MAX, CONTOUR,
-                    GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, result.mean, result.stdDev);
+            double density = n / (double) (L * L);
+            double meanSec = result.mean / 1000.0;
+
+            telemetryList.add(new ExecutionTime(
+                    FlockingModel.STANDARD, density, n, "CIM",
+                    meanSec, BENCHMARK_ITERATIONS, L, RC
+            ));
 
             System.out.printf("[Variation N - Free Density] N: %d | L: %.0f | M: %d | Mean: %.4f ms | StdDev: %.4f ms%n",
                     n, L, optimalM, result.mean, result.stdDev);
         }
+
+        CsvExporter.exportTelemetry(telemetryList, "variation_n_free_density.csv");
     }
 
     /**
@@ -119,6 +139,7 @@ public class StressTest {
         int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
 
         Random random = new Random(SEED);
+        List<ExecutionTime> telemetryList = new ArrayList<>();
 
         for (int n : nValues) {
             int l = (int) Math.round(Math.sqrt(n / TARGET_DENSITY));
@@ -133,19 +154,25 @@ public class StressTest {
 
             BenchmarkResult result = runBenchmark(service, particles);
 
-            CsvExporter.exportVariationNFixedDensityTelemetry(n, l, m, actualDensity, RC, RI_MIN, RI_MAX, CONTOUR,
-                    GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, result.mean, result.stdDev);
+            double meanSec = result.mean / 1000.0;
+
+            telemetryList.add(new ExecutionTime(
+                    FlockingModel.STANDARD, actualDensity, n, "CIM",
+                    meanSec, BENCHMARK_ITERATIONS, l, RC
+            ));
 
             System.out.printf("[Variation N - Fixed Density] N: %d | L: %d | M: %d | Density: %.4f | Mean: %.4f ms | StdDev: %.4f ms%n",
                     n, l, m, actualDensity, result.mean, result.stdDev);
         }
+
+        CsvExporter.exportTelemetry(telemetryList, "variation_n_fixed_density.csv");
     }
 
     /**
-     * Section 4.1: Variation of N with Free Density
+     * Section 4.1: Variation of N with Free Density (Brute Force)
      */
     @Test
-    @DisplayName("Stress Test: Variation of N - Free Density (Section 4.1)")
+    @DisplayName("Stress Test: Variation of N - Free Density Brute Force (Section 4.1)")
     void testVariationOfNFreeDensityBruteForce() {
         int optimalM = 1;
         int maxN = findMaxFeasibleN(L);
@@ -153,7 +180,7 @@ public class StressTest {
         int[] nValues = {10, 50, 100, 200, 300, INTERMEDIATE_N, 500, 600, 700, 800, 900, maxN};
 
         Random random = new Random(SEED);
-
+        List<ExecutionTime> telemetryList = new ArrayList<>();
 
         for (int n : nValues) {
             Set<SizedParticle> particles = generateParticles(n, L, random.nextInt());
@@ -164,23 +191,31 @@ public class StressTest {
 
             BenchmarkResult result = runBenchmark(service, particles);
 
-            CsvExporter.exportVariationNFreeDensityTelemetryBruteForce(n, L, optimalM, RC, RI_MIN, RI_MAX, CONTOUR,
-                    GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, result.mean, result.stdDev);
+            double density = n / (double) (L * L);
+            double meanSec = result.mean / 1000.0;
 
-            System.out.printf("[Variation N - Free Density] N: %d | L: %.0f | M: %d | Mean: %.4f ms | StdDev: %.4f ms%n",
+            telemetryList.add(new ExecutionTime(
+                    FlockingModel.STANDARD, density, n, "brute_force",
+                    meanSec, BENCHMARK_ITERATIONS, L, RC
+            ));
+
+            System.out.printf("[Variation N - Free Density BF] N: %d | L: %.0f | M: %d | Mean: %.4f ms | StdDev: %.4f ms%n",
                     n, L, optimalM, result.mean, result.stdDev);
         }
+
+        CsvExporter.exportTelemetry(telemetryList, "variation_n_free_density_bf.csv");
     }
 
     /**
-     * Section 4.2: Variation of N with Fixed Density
+     * Section 4.2: Variation of N with Fixed Density (Brute Force)
      */
     @Test
-    @DisplayName("Stress Test: Variation of N - Fixed Density (Section 4.2)")
+    @DisplayName("Stress Test: Variation of N - Fixed Density Brute Force (Section 4.2)")
     void testVariationOfNFixedDensityBruteForce() {
         int[] nValues = {50, 100, 200, INTERMEDIATE_N, 600, 800, 1000, 1200, 1600};
 
         Random random = new Random(SEED);
+        List<ExecutionTime> telemetryList = new ArrayList<>();
 
         for (int n : nValues) {
             int l = (int) Math.round(Math.sqrt(n / TARGET_DENSITY));
@@ -195,18 +230,22 @@ public class StressTest {
 
             BenchmarkResult result = runBenchmark(service, particles);
 
-            CsvExporter.exportVariationNFixedDensityTelemetryBruteForce(n, l, m, actualDensity, RC, RI_MIN, RI_MAX, CONTOUR,
-                    GLOBAL_WARMUP_RUNS, BENCHMARK_ITERATIONS, result.mean, result.stdDev);
+            double meanSec = result.mean / 1000.0;
 
-            System.out.printf("[Variation N - Fixed Density] N: %d | L: %d | M: %d | Density: %.4f | Mean: %.4f ms | StdDev: %.4f ms%n",
+            telemetryList.add(new ExecutionTime(
+                    FlockingModel.STANDARD, actualDensity, n, "brute_force",
+                    meanSec, BENCHMARK_ITERATIONS, l, RC
+            ));
+
+            System.out.printf("[Variation N - Fixed Density BF] N: %d | L: %d | M: %d | Density: %.4f | Mean: %.4f ms | StdDev: %.4f ms%n",
                     n, l, m, actualDensity, result.mean, result.stdDev);
         }
+
+        CsvExporter.exportTelemetry(telemetryList, "variation_n_fixed_density_bf.csv");
     }
 
     /**
      * Determines the highest N that can be generated in a box of side {@code l} without overlapping.
-     * Probes increasing values of N (with a few retries to absorb sampling variance) until the
-     * generator fails, then returns the last successful N.
      */
     private int findMaxFeasibleN(float l) {
         if (maxFeasibleNCache != null) {
@@ -227,7 +266,6 @@ public class StressTest {
             }
         }
 
-        // Step back one notch to stay clear of the probabilistic packing boundary.
         if (best > start) {
             best -= step;
         }
@@ -237,10 +275,6 @@ public class StressTest {
         return best;
     }
 
-    /**
-     * True only if every attempt generated all {@code n} particles, filtering out sampling variance
-     * near the maximum packing density.
-     */
     private boolean canGenerateReliably(int n, float l, int seed) {
         for (int attempt = 0; attempt < 3; attempt++) {
             try {
@@ -252,14 +286,11 @@ public class StressTest {
         return true;
     }
 
-    /**
-     * Generates {@code n} particles, retrying with fresh random seeds to absorb sampling variance.
-     */
     private Set<SizedParticle> generateParticles(int n, float l, int seed) {
         IllegalStateException lastFailure = null;
         for (int attempt = 0; attempt < 5; attempt++) {
             try {
-                return RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX,seed);
+                return RandomParticleGenerator.generate(n, l, RI_MIN, RI_MAX, seed);
             } catch (IllegalStateException e) {
                 lastFailure = e;
             }
@@ -267,10 +298,6 @@ public class StressTest {
         throw lastFailure;
     }
 
-    /**
-     * Executes heavy dummy iterations before recording measurements to ensure
-     * the JVM JIT compiler fully optimizes and compiles bytecode to machine code.
-     */
     private void globalJitWarmup(float l, Set<SizedParticle> particles) {
         CellIndexService<SizedParticle> warmupService = new CellIndexService<>(3, l, StressTest.RC, particles);
         for (int i = 0; i < GLOBAL_WARMUP_RUNS; i++) {
@@ -281,9 +308,6 @@ public class StressTest {
         }
     }
 
-    /**
-     * Measures precise execution times and returns the Mean and Standard Deviation.
-     */
     private BenchmarkResult runBenchmark(CellIndexService<SizedParticle> service,
                                          Set<SizedParticle> particles) {
 
@@ -301,14 +325,12 @@ public class StressTest {
             runTimesMs[i] = elapsedNano / 1_000_000.0;
         }
 
-        // 1. Calculate Mean
         double sum = 0;
         for (double time : runTimesMs) {
             sum += time;
         }
         double mean = sum / BENCHMARK_ITERATIONS;
 
-        // 2. Calculate Standard Deviation
         double varianceSum = 0;
         for (double time : runTimesMs) {
             varianceSum += Math.pow(time - mean, 2);

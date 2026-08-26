@@ -1,6 +1,13 @@
 package ar.edu.itba.sds.utils;
 
 import ar.edu.itba.sds.model.entities.SizedParticle;
+import ar.edu.itba.sds.model.flocking.FlockingModel;
+import ar.edu.itba.sds.model.telemetry.ClusterDetail;
+import ar.edu.itba.sds.model.telemetry.ExecutionTime;
+import ar.edu.itba.sds.model.telemetry.ParticlePoint;
+import ar.edu.itba.sds.model.telemetry.RunConfig;
+import ar.edu.itba.sds.model.telemetry.TimeObservable;
+import ar.edu.itba.sds.model.telemetry.TrajectoryPoint;
 import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.service.OffLatticeService;
 import picocli.CommandLine;
@@ -8,16 +15,24 @@ import picocli.CommandLine.Option;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @CommandLine.Command(
         name = "sds-simulation",
-        mixinStandardHelpOptions = true, // Adds -h, --help, -V, --version automatically
+        mixinStandardHelpOptions = true,
         version = "1.0.0",
         description = "Off-lattice particle simulation runner"
 )
 public class ArgsParser implements Runnable {
+
+    private static final DateTimeFormatter RUN_ID_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS").withZone(ZoneOffset.UTC);
 
     @Option(names = {"-l", "--length"}, description = "Grid length", defaultValue = "20")
     private int l;
@@ -32,7 +47,7 @@ public class ArgsParser implements Runnable {
     private float riMax;
 
     @Option(names = {"-m"}, description = "Cell grid split factor")
-    private Integer m; // Nullable so we can detect if passed explicitly
+    private Integer m;
 
     @Option(names = {"-n"}, description = "Number of particles", defaultValue = "7")
     private int n;
@@ -52,16 +67,26 @@ public class ArgsParser implements Runnable {
     @Option(names = {"--seed", "-s"}, description = "Random seed for reproducibility", defaultValue = "42")
     private long seed;
 
+    @Option(names = {"--model"}, description = "Flocking model type", defaultValue = "STANDARD")
+    private FlockingModel model;
+
     @Override
     public void run() {
-        // Calculate default m if user didn't specify -m
         if (m == null) {
             m = (int) Math.floor(l / (rc + 2 * riMax));
         }
 
+        // Generate timestamp-based run ID (e.g., 20260826_210646_123)
+        final String runId = RUN_ID_FORMATTER.format(Instant.now());
         final Random random = new Random(seed);
 
-        // 1. Generate particles
+        // 1. Export Run Metadata Config
+        RunConfig config = new RunConfig(
+                runId, model, l, rc, riMin, riMax, m, n, contour, deltaT, entireT, eta, seed
+        );
+        CsvExporter.exportTelemetry(List.of(config), "run_config.csv");
+
+        // 2. Generate particles
         Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, riMin, riMax, random.nextInt());
 
         System.out.println("N particles: " + particles.size());
@@ -69,41 +94,84 @@ public class ArgsParser implements Runnable {
         System.out.println("m: " + m);
         System.out.println("r: " + rc);
 
-        // 2. Compute neighbors
         final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
         final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>();
 
-        for (float t = 0; t < entireT; t += deltaT) {
+        // Telemetry collectors
+        List<ExecutionTime> executionTimes = new ArrayList<>();
+        List<TimeObservable> timeObservables = new ArrayList<>();
+        List<ClusterDetail> clusterDetails = new ArrayList<>();
+        List<TrajectoryPoint> trajectoryPoints = new ArrayList<>();
+        List<ParticlePoint> particlePoints = new ArrayList<>();
+
+        int timestep = 0;
+        for (float t = 0; t < entireT; t += deltaT, timestep++) {
 
             Instant start = Instant.now();
             service.calculateNeighbors(contour, particles);
             Instant end = Instant.now();
 
             long executionTimeMs = Duration.between(start, end).toMillis();
+            double executionTimeSec = executionTimeMs / 1000.0;
             System.out.println("Time taken to calculate neighbors: " + executionTimeMs + " ms");
 
-            // 3. Export data
-            CsvExporter.exportExecutionTelemetry(n, l, m, rc, riMin, riMax, executionTimeMs);
-            CsvExporter.exportParticleData(particles, 0);
+            executionTimes.add(new ExecutionTime(
+                    model, config.getDensity(), n, "CIM", executionTimeSec, config.getNSteps(), l, rc
+            ));
 
-            // 4. Print results
-            for (SizedParticle p : particles) {
-                System.out.println("Particle: " + p);
-                System.out.println("Neighbors: " + p.getNeighbors());
+            List<SizedParticle> particleList = new ArrayList<>(particles);
+
+            // Collect Particle Data & Trajectories
+            for (int i = 0; i < particleList.size(); i++) {
+                SizedParticle p = particleList.get(i);
+                double x = (p.getMaxX() + p.getMinX()) / 2.0;
+                double y = (p.getMaxY() + p.getMinY()) / 2.0;
+                double radius = (p.getMaxX() - p.getMinX()) / 2.0;
+
+                String neighborsStr = p.getNeighbors().stream()
+                        .map(neighbor -> String.valueOf(particleList.indexOf(neighbor)))
+                        .collect(Collectors.joining(" "));
+
+                if (neighborsStr.isEmpty()) {
+                    neighborsStr = "none";
+                } else {
+                    neighborsStr = "[" + neighborsStr + "]";
+                }
+
+                particlePoints.add(new ParticlePoint(runId, t, timestep, i, x, y, radius, neighborsStr));
+                trajectoryPoints.add(new TrajectoryPoint(runId, t, i, x, y, 0.0, 0.0, 0.0));
             }
 
-            System.out.println("Polarization: " + offLatticeService.getPolarization(particles));
-
-            // 5. Print clusters
+            // Calculate Observables & Clusters
+            double va = offLatticeService.getPolarization(particles);
             Set<Set<SizedParticle>> clusters = offLatticeService.getClusters(particles);
-            int counter = 0;
+
+            int maxClusterSize = 0;
+            int clusterId = 0;
+
             for (Set<SizedParticle> cluster : clusters) {
-                System.out.println("cluster " + counter + ": " + cluster);
-                counter++;
+                int clusterSize = cluster.size();
+                if (clusterSize > maxClusterSize) {
+                    maxClusterSize = clusterSize;
+                }
+                clusterDetails.add(new ClusterDetail(runId, t, clusterId++, clusterSize));
             }
 
+            double s = (double) maxClusterSize / n;
+            timeObservables.add(new TimeObservable(
+                    runId, model != null ? model.name() : "STANDARD", config.getDensity(), eta, t, va, s, maxClusterSize
+            ));
+
+            // Advance system
             particles = offLatticeService.getNewStandardListOfParticles(deltaT, eta, random, particles);
         }
+
+        // 3. Batch export telemetry
+        CsvExporter.exportTelemetry(executionTimes, "execution_times.csv");
+        CsvExporter.exportTelemetry(timeObservables, "time_observables.csv");
+        CsvExporter.exportTelemetry(clusterDetails, "cluster_details.csv");
+        CsvExporter.exportTelemetry(trajectoryPoints, "trajectories.csv");
+        CsvExporter.exportTelemetry(particlePoints, "particle_data.csv");
     }
 
     // Getters
@@ -122,4 +190,5 @@ public class ArgsParser implements Runnable {
     public float getDeltaT() { return deltaT; }
     public float getEntireT() { return entireT; }
     public float getEta() { return eta; }
+    public FlockingModel getModel() { return model; }
 }
