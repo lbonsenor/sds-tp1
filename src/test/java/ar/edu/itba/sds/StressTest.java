@@ -277,7 +277,7 @@ public class StressTest {
             for (SizedParticle p : particles) {
                 p.getNeighbors().clear();
             }
-            warmupService.calculateNeighbors(CONTOUR);
+            warmupService.calculateNeighbors(CONTOUR, particles);
         }
     }
 
@@ -295,7 +295,7 @@ public class StressTest {
             }
 
             long startNano = System.nanoTime();
-            service.calculateNeighbors(CONTOUR);
+            service.calculateNeighbors(CONTOUR, particles);
             long elapsedNano = System.nanoTime() - startNano;
 
             runTimesMs[i] = elapsedNano / 1_000_000.0;

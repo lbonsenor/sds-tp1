@@ -12,6 +12,7 @@ public class CellIndexService<T extends SizedParticle> {
     private final int M;
     private final float L;
     private final float rc;
+    private final float cellSize;
     private final List<T>[][] grid;
 
     // Neighbor offsets for 2D symmetric Cell Index Method:
@@ -43,7 +44,7 @@ public class CellIndexService<T extends SizedParticle> {
                     M, L / M, rc + 2 * maxRadius, (int) Math.floor(L / (rc + 2 * maxRadius))));
         }
 
-        float cellSize = L / M;
+        this.cellSize = L / M;
         this.grid = new ArrayList[M][M];
 
         for (int i = 0; i < M; i++) {
@@ -51,22 +52,16 @@ public class CellIndexService<T extends SizedParticle> {
                 grid[i][j] = new ArrayList<>();
             }
         }
-
-        // Assign particles to cells
-        for (T particle : particles) {
-            float x = (particle.getMaxX() + particle.getMinX()) * 0.5f;
-            float y = (particle.getMaxY() + particle.getMinY()) * 0.5f;
-
-            int cellX = Math.min((int) (x / cellSize), M - 1);
-            int cellY = Math.min((int) (y / cellSize), M - 1);
-            grid[cellX][cellY].add(particle);
-        }
     }
+
+
 
     /**
      * Executes Symmetric Cell Index Method.
      */
-    public void calculateNeighbors(boolean contour) {
+    public void calculateNeighbors(boolean contour, Collection<T> particles) {
+        CalculateCells(particles);
+
         for (int x = 0; x < M; x++) {
             for (int y = 0; y < M; y++) {
                 List<T> currentCell = grid[x][y];
@@ -116,6 +111,18 @@ public class CellIndexService<T extends SizedParticle> {
         if (distance <= rc) {
             p1.getNeighbors().add(p2);
             p2.getNeighbors().add(p1);
+        }
+    }
+
+    private void CalculateCells(Collection<T> particles) {
+        // Assign particles to cells
+        for (T particle : particles) {
+            float x = (particle.getMaxX() + particle.getMinX()) * 0.5f;
+            float y = (particle.getMaxY() + particle.getMinY()) * 0.5f;
+
+            int cellX = Math.min((int) (x / cellSize), M - 1);
+            int cellY = Math.min((int) (y / cellSize), M - 1);
+            grid[cellX][cellY].add(particle);
         }
     }
 }

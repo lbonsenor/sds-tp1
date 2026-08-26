@@ -20,34 +20,37 @@ import java.util.Set;
 public class ArgsParser implements Runnable {
 
     @Option(names = {"-l", "--length"}, description = "Grid length", defaultValue = "20")
-    private int l = 20;
+    private int l;
 
     @Option(names = {"-rc", "--cut-off"}, description = "Cut-off distance", defaultValue = "3.0")
-    private float rc = 3.0f;
+    private float rc;
 
     @Option(names = {"-ri-min", "--min-radius"}, description = "Minimum radius", defaultValue = "0.23")
-    private float riMin = 0.23f;
+    private float riMin;
 
     @Option(names = {"-ri-max", "--max-radius"}, description = "Maximum radius", defaultValue = "0.26")
-    private float riMax = 0.26f;
+    private float riMax;
 
     @Option(names = {"-m"}, description = "Cell grid split factor")
     private Integer m; // Nullable so we can detect if passed explicitly
 
     @Option(names = {"-n"}, description = "Number of particles", defaultValue = "7")
-    private int n = 7;
+    private int n;
 
     @Option(names = {"-c", "--contour"}, description = "Enable contour (periodic boundary conditions)")
-    private boolean contour = false;
+    private boolean contour;
 
     @Option(names = {"--delta-t"}, description = "Delta time step", defaultValue = "0.5")
-    private float deltaT = 0.5f;
+    private float deltaT;
 
     @Option(names = {"--entire-t"}, description = "Total execution time", defaultValue = "5.0")
-    private float entireT = 5.0f;
+    private float entireT;
 
     @Option(names = {"--eta"}, description = "Noise parameter eta", defaultValue = "2.0")
-    private float eta = 2.0f;
+    private float eta;
+
+    @Option(names = {"--seed", "-s"}, description = "Random seed for reproducibility", defaultValue = "42")
+    private long seed;
 
     @Override
     public void run() {
@@ -56,7 +59,7 @@ public class ArgsParser implements Runnable {
             m = (int) Math.floor(l / (rc + 2 * riMax));
         }
 
-        final Random random = new Random();
+        final Random random = new Random(seed);
 
         // 1. Generate particles
         Set<SizedParticle> particles = RandomParticleGenerator.generate(n, l, riMin, riMax, random.nextInt());
@@ -73,7 +76,7 @@ public class ArgsParser implements Runnable {
         for (float t = 0; t < entireT; t += deltaT) {
 
             Instant start = Instant.now();
-            service.calculateNeighbors(contour);
+            service.calculateNeighbors(contour, particles);
             Instant end = Instant.now();
 
             long executionTimeMs = Duration.between(start, end).toMillis();
@@ -99,7 +102,7 @@ public class ArgsParser implements Runnable {
                 counter++;
             }
 
-            particles = offLatticeService.getNewStandardListOfParticles(deltaT, eta, random.hashCode(), particles);
+            particles = offLatticeService.getNewStandardListOfParticles(deltaT, eta, random, particles);
         }
     }
 

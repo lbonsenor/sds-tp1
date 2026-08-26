@@ -9,20 +9,20 @@ public class OffLatticeService <T extends SizedParticle> {
     public OffLatticeService() {
     }
 
-    public Set<SizedParticle> getNewStandardListOfParticles(float deltaTime, float eta, int seed, Collection<T> particles){
+    public Set<SizedParticle> getNewStandardListOfParticles(float deltaTime, float eta, Random random, Collection<T> particles){
 
         Set<SizedParticle> toReturn = new LinkedHashSet<>();
         for (SizedParticle p: particles){
-            toReturn.add(p.getNewPositionStandard(deltaTime,eta,seed));
+            toReturn.add(p.getNewPositionStandard(deltaTime,eta,random));
         }
         return toReturn;
     }
 
-    public Set<SizedParticle> getNewVotanteListOfParticles(float deltaTime,  float eta, int seed,Collection<T> particles){
+    public Set<SizedParticle> getNewVotanteListOfParticles(float deltaTime,  float eta, Random random,Collection<T> particles){
 
         Set<SizedParticle> toReturn = new LinkedHashSet<>();
         for (SizedParticle p: particles){
-            toReturn.add(p.getNewPositionVotante(deltaTime,eta,seed));
+            toReturn.add(p.getNewPositionVotante(deltaTime,eta,random));
         }
         return toReturn;
     }

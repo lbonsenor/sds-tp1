@@ -60,7 +60,7 @@ public class SizedParticle implements Entity2D<SizedParticle> {
         return (dx * dx + dy * dy) <= (this.r * this.r);
     }
 
-    public SizedParticle getNewPositionStandard(float deltaTime, float eta, int seed) {
+    public SizedParticle getNewPositionStandard(float deltaTime, float eta, Random random) {
 
         float dx = v * (float) Math.cos(angle);
         float dy = v * (float) Math.sin(angle);
@@ -75,18 +75,17 @@ public class SizedParticle implements Entity2D<SizedParticle> {
                 radius_sin_accum = (float) (radius_sin_accum + Math.sin(p.angle));
                 count++;
         }
-        Random random = new Random(seed);
         float deltaTheta = (random.nextFloat() - 0.5f) * eta;
         float newAngle = (float)(Math.atan2(radius_sin_accum/count,radius_cos_accum/count))+deltaTheta;
 
         return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
     }
 
-    public SizedParticle getNewPositionVotante(float deltaTime, float eta, int seed) {
+    public SizedParticle getNewPositionVotante(float deltaTime, float eta, Random random) {
         float dx = v * (float) Math.cos(angle);
         float dy = v * (float) Math.sin(angle);
 
-        Random random = new Random(seed);
+
         float deltaTheta = (random.nextFloat() - 0.5f) * eta;
         float newAngle = this.angle;
         if (!neighbors.isEmpty()) {
