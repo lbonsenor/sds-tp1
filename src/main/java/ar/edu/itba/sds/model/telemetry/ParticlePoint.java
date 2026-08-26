@@ -19,6 +19,15 @@ public class ParticlePoint {
     @CsvBindByName(column = "y")
     private double y;
 
+    @CsvBindByName(column = "vx")
+    private double vx;
+
+    @CsvBindByName(column = "vy")
+    private double vy;
+
+    @CsvBindByName(column = "theta")
+    private double theta; // velocity angle, used to color the vector in the animation
+
     @CsvBindByName(column = "radius")
     private double radius;
 
@@ -28,7 +37,7 @@ public class ParticlePoint {
     public ParticlePoint() {
     }
 
-    public ParticlePoint(String runId, double t, int particleId, double x, double y, double radius, String neighbors) {
+    public ParticlePoint(String runId, double t, int particleId, double x, double y, double radius, String neighbors, double theta, double vx, double vy) {
         this.runId = runId;
         this.t = t;
         this.particleId = particleId;
@@ -36,6 +45,10 @@ public class ParticlePoint {
         this.y = y;
         this.radius = radius;
         this.neighbors = neighbors;
+        this.theta = theta;
+        this.vx = vx;
+        this.vy = vy;
+
     }
 
     public String getRunId() { return runId; }
@@ -58,4 +71,28 @@ public class ParticlePoint {
 
     public String getNeighbors() { return neighbors; }
     public void setNeighbors(String neighbors) { this.neighbors = neighbors; }
+
+    public double getVx() {
+        return vx;
+    }
+
+    public void setVx(double vx) {
+        this.vx = vx;
+    }
+
+    public double getVy() {
+        return vy;
+    }
+
+    public void setVy(double vy) {
+        this.vy = vy;
+    }
+
+    public double getTheta() {
+        return theta;
+    }
+
+    public void setTheta(double theta) {
+        this.theta = theta;
+    }
 }

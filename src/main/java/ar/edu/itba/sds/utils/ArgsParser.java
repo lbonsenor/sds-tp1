@@ -104,7 +104,7 @@ public class ArgsParser implements Runnable {
         List<ExecutionTime> executionTimes = new ArrayList<>();
         List<TimeObservable> timeObservables = new ArrayList<>();
         List<ClusterDetail> clusterDetails = new ArrayList<>();
-        List<TrajectoryPoint> trajectoryPoints = new ArrayList<>();
+        //List<TrajectoryPoint> trajectoryPoints = new ArrayList<>();
         List<ParticlePoint> particlePoints = new ArrayList<>();
 
         int timestep = 0;
@@ -136,6 +136,9 @@ public class ArgsParser implements Runnable {
                 double x = (p.getMaxX() + p.getMinX()) / 2.0;
                 double y = (p.getMaxY() + p.getMinY()) / 2.0;
                 double radius = (p.getMaxX() - p.getMinX()) / 2.0;
+                double theta = p.getAngle();
+                double vx = p.getV() * (float) Math.cos(theta);
+                double vy = p.getV() * (float) Math.sin(theta);
 
                 String neighborsStr = p.getNeighbors().stream()
                         .map(particleIndices::get)
@@ -149,8 +152,8 @@ public class ArgsParser implements Runnable {
                     neighborsStr = "[" + neighborsStr + "]";
                 }
 
-                particlePoints.add(new ParticlePoint(runId, t, i, x, y, radius, neighborsStr));
-                trajectoryPoints.add(new TrajectoryPoint(runId, t, i, x, y, 0.0, 0.0, 0.0));
+                particlePoints.add(new ParticlePoint(runId, t, i, x, y, radius, neighborsStr, theta,vx,vy));
+               // trajectoryPoints.add(new TrajectoryPoint(runId, t, i, x, y, 0.0, 0.0, 0.0));
             }
 
             // Calculate Observables & Clusters
@@ -186,7 +189,7 @@ public class ArgsParser implements Runnable {
         CsvExporter.exportTelemetry(executionTimes, "execution_times_cim.csv");
         CsvExporter.exportTelemetry(timeObservables, "time_observables.csv");
         CsvExporter.exportTelemetry(clusterDetails, "cluster_details.csv");
-        CsvExporter.exportTelemetry(trajectoryPoints, "trajectories.csv");
+       // CsvExporter.exportTelemetry(trajectoryPoints, "trajectories.csv");
         CsvExporter.exportTelemetry(particlePoints, "particle_data.csv");
     }
 
