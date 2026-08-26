@@ -119,7 +119,7 @@ public class ArgsParser implements Runnable {
             System.out.println("Time taken to calculate neighbors: " + executionTimeNs + " ns");
 
             executionTimes.add(new ExecutionTime(
-                    model, config.getDensity(), n, "CIM", executionTimeSec, config.getNSteps(), l, rc
+                    runId, model, config.getDensity(), n, "CIM", executionTimeSec, timestep, l, rc
             ));
 
             List<SizedParticle> particleList = new ArrayList<>(particles);
@@ -149,7 +149,7 @@ public class ArgsParser implements Runnable {
                     neighborsStr = "[" + neighborsStr + "]";
                 }
 
-                particlePoints.add(new ParticlePoint(runId, t, timestep, i, x, y, radius, neighborsStr));
+                particlePoints.add(new ParticlePoint(runId, t, i, x, y, radius, neighborsStr));
                 trajectoryPoints.add(new TrajectoryPoint(runId, t, i, x, y, 0.0, 0.0, 0.0));
             }
 
@@ -183,7 +183,7 @@ public class ArgsParser implements Runnable {
         }
 
         // 3. Batch export telemetry
-        CsvExporter.exportTelemetry(executionTimes, "execution_times.csv");
+        CsvExporter.exportTelemetry(executionTimes, "execution_times_cim.csv");
         CsvExporter.exportTelemetry(timeObservables, "time_observables.csv");
         CsvExporter.exportTelemetry(clusterDetails, "cluster_details.csv");
         CsvExporter.exportTelemetry(trajectoryPoints, "trajectories.csv");

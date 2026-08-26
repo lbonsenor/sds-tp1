@@ -7,11 +7,8 @@ public class ParticlePoint {
     @CsvBindByName(column = "run_id")
     private String runId;
 
-    @CsvBindByName(column = "t")
+    @CsvBindByName(column = "time")
     private double t;
-
-    @CsvBindByName(column = "timestep")
-    private int timestep;
 
     @CsvBindByName(column = "particle_id")
     private int particleId;
@@ -31,10 +28,9 @@ public class ParticlePoint {
     public ParticlePoint() {
     }
 
-    public ParticlePoint(String runId, double t, int timestep, int particleId, double x, double y, double radius, String neighbors) {
+    public ParticlePoint(String runId, double t, int particleId, double x, double y, double radius, String neighbors) {
         this.runId = runId;
         this.t = t;
-        this.timestep = timestep;
         this.particleId = particleId;
         this.x = x;
         this.y = y;
@@ -47,9 +43,6 @@ public class ParticlePoint {
 
     public double getT() { return t; }
     public void setT(double t) { this.t = t; }
-
-    public int getTimestep() { return timestep; }
-    public void setTimestep(int timestep) { this.timestep = timestep; }
 
     public int getParticleId() { return particleId; }
     public void setParticleId(int particleId) { this.particleId = particleId; }

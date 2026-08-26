@@ -34,7 +34,7 @@ public class RunConfig {
     @CsvBindByName(column = "periodic_boundary")
     private boolean periodicBoundary; // contour
 
-    @CsvBindByName(column = "delta_t")
+    @CsvBindByName(column = "delta_time")
     private float deltaT; // simulation time step
 
     @CsvBindByName(column = "total_time")

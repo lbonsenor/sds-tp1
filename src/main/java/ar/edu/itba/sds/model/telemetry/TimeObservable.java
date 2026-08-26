@@ -16,7 +16,7 @@ public class TimeObservable {
     @CsvBindByName(column = "eta")
     private double eta;
 
-    @CsvBindByName(column = "t")
+    @CsvBindByName(column = "time")
     private double t;
 
     @CsvBindByName(column = "va")

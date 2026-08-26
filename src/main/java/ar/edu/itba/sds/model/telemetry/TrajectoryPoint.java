@@ -7,7 +7,7 @@ public class TrajectoryPoint {
     @CsvBindByName(column = "run_id")
     private String runId;
 
-    @CsvBindByName(column = "t")
+    @CsvBindByName(column = "time")
     private double t;
 
     @CsvBindByName(column = "particle_id")

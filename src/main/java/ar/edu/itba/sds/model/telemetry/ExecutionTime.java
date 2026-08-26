@@ -6,6 +6,8 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 
 public class ExecutionTime {
+    @CsvBindByName(column = "run_id")
+    private String runId;
 
     @CsvCustomBindByName(column = "model", converter = FlockingModelConverter.class)
     private FlockingModel model;
@@ -34,8 +36,9 @@ public class ExecutionTime {
     public ExecutionTime() {
     }
 
-    public ExecutionTime(FlockingModel model, double density, int nParticles, String method,
+    public ExecutionTime(String runId, FlockingModel model, double density, int nParticles, String method,
                          double executionTimeSec, int nSteps, double boxLength, double interactionRadius) {
+        this.runId = runId;
         this.model = model;
         this.density = density;
         this.nParticles = nParticles;
