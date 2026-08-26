@@ -2,7 +2,7 @@ package ar.edu.itba.sds.utils;
 
 public class ArgsParser {
     int l = 20;
-    float rc = 1;
+    float rc = 3;
     float riMin = 0.23f;
     float riMax = 0.26f;
     int m = (int) Math.floor(l / (rc + 2 * riMax));

@@ -5,14 +5,8 @@ import ar.edu.itba.sds.model.entities.SizedParticle;
 import java.util.*;
 
 public class OffLatticeService <T extends SizedParticle> {
-    private final int M;
-    private final float L;
-    private final float rc;
 
-    public OffLatticeService(int M, float L, float rc) {
-        this.M = M;
-        this.L = L;
-        this.rc = rc;
+    public OffLatticeService() {
     }
 
     public Set<SizedParticle> getNewStandardListOfParticles(float deltaTime, float eta, int seed, Collection<T> particles){
@@ -33,4 +27,40 @@ public class OffLatticeService <T extends SizedParticle> {
         return toReturn;
     }
 
+    public Set<Set<SizedParticle>> getClusters(Collection<T> particles) {
+
+        Set<Set<SizedParticle>> clusters = new HashSet<>();
+        Set<SizedParticle> visited = new HashSet<>();
+
+        for (SizedParticle particle : particles) {
+
+            if (visited.contains(particle)) {
+                continue;
+            }
+
+            Set<SizedParticle> cluster = new HashSet<>();
+            Queue<SizedParticle> queue = new LinkedList<>();
+
+            queue.add(particle);
+            visited.add(particle);
+
+            while (!queue.isEmpty()) {
+
+                SizedParticle current = queue.poll();
+                cluster.add(current);
+
+                for (SizedParticle neighbor : current.getNeighbors()) {
+
+                    if (!visited.contains(neighbor)) {
+                        visited.add(neighbor);
+                        queue.add(neighbor);
+                    }
+                }
+            }
+
+            clusters.add(cluster);
+        }
+
+        return clusters;
+    }
 }

@@ -9,6 +9,7 @@ import ar.edu.itba.sds.utils.RandomParticleGenerator;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
 import java.util.Set;
@@ -40,7 +41,7 @@ public class Main {
 
         // 2. Compute neighbors
         final CellIndexService<SizedParticle> service = new CellIndexService<>(m, l, rc, particles);
-        final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>(m,l,rc);
+        final OffLatticeService<SizedParticle> offLatticeService = new OffLatticeService<>();
 
         for (float t = 0 ; t < totalTime; t += deltaTime){
 
@@ -60,10 +61,17 @@ public class Main {
                 System.out.println("Particle: " + p);
                 System.out.println("Neighbors: " + p.getNeighbors());
             }
-            particles = offLatticeService.getNewVotanteListOfParticles(deltaTime, eta, random.hashCode(),particles);
-//            particles = offLatticeService.getNewStandardListOfParticles(deltaTime, eta, random.hashCode(),particles);
-//            System.out.println(particles);
 
+            // 5. Print clusters
+            Set<Set<SizedParticle>> clusters = offLatticeService.getClusters(particles);
+            int counter = 0;
+            for (Set<SizedParticle> cluster  : clusters){
+                System.out.println("cluster "+ counter + ": "+ cluster);
+                counter++;
+            }
+
+            //            particles = offLatticeService.getNewVotanteListOfParticles(deltaTime, eta, random.hashCode(),particles);
+            particles = offLatticeService.getNewStandardListOfParticles(deltaTime, eta, random.hashCode(),particles);
         }
     }
 }
