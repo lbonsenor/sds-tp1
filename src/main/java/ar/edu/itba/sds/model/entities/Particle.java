@@ -2,10 +2,7 @@ package ar.edu.itba.sds.model.entities;
 
 import ar.edu.itba.sds.model.Entity2D;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class Particle implements Entity2D<Particle> {
     private final float x;
@@ -67,6 +64,16 @@ public class Particle implements Entity2D<Particle> {
     @Override
     public Set<Particle> getNeighbors() {
         return neighbors;
+    }
+
+    @Override
+    public Particle getNewPositionVotante(float deltaTime, float eta, Random random) {
+        return null;
+    }
+
+    @Override
+    public Particle getNewPositionStandard(float deltaTime, float eta, Random random) {
+        return null;
     }
 
     @Override
