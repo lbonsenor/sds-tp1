@@ -1,6 +1,6 @@
 package ar.edu.itba.sds.utils;
 
-import ar.edu.itba.sds.model.Entity2D;
+import ar.edu.itba.sds.model.entities.Entity2D;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 
 import java.util.*;

@@ -1,11 +1,10 @@
 package ar.edu.itba.sds.service;
 
-import ar.edu.itba.sds.model.Entity2D;
+import ar.edu.itba.sds.model.entities.Entity2D;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public class CellIndexService<T extends Entity2D> {
 
@@ -107,7 +106,7 @@ public class CellIndexService<T extends Entity2D> {
     }
 
     private void checkAndAddNeighbor(T p1, T p2, boolean contour) {
-        float distance = p1.euclideanDistance(p2, contour ? Optional.of(L) : Optional.empty());
+        float distance = contour ? p1.euclideanDistance(p2, L) : p1.euclideanDistance(p2);
 
         if (distance <= rc) {
             p1.getNeighbors().add(p2);

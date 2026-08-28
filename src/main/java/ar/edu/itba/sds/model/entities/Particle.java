@@ -1,6 +1,6 @@
 //package ar.edu.itba.sds.model.entities;
 //
-//import ar.edu.itba.sds.model.Entity2D;
+//import ar.edu.itba.sds.model.entities.Entity2D;
 //
 //import java.util.HashSet;
 //import java.util.Objects;

@@ -1,7 +1,5 @@
 package ar.edu.itba.sds.model.entities;
 
-import ar.edu.itba.sds.model.Entity2D;
-
 import java.util.*;
 
 public class SizedParticle implements Entity2D {
@@ -14,7 +12,9 @@ public class SizedParticle implements Entity2D {
     private final Set<Entity2D> neighbors = new HashSet<>();
 
     public SizedParticle(float x, float y, float r, float v, float angle) {
-        if (x-r < 0 || y-r < 0) throw new IllegalArgumentException();
+        if (x < 0 || y < 0) {
+            throw new IllegalArgumentException("Particle coordinates must be non-negative.");
+        }
         this.x = x;
         this.y = y;
         this.r = r;
@@ -22,123 +22,72 @@ public class SizedParticle implements Entity2D {
         this.angle = angle;
     }
 
+    // --- Distance Overloads ---
+
     @Override
-    public float euclideanDistance(Entity2D other, Optional<Float> contour) {
+    public float euclideanDistance(Entity2D other) {
         float dx = Math.abs(this.x - other.getX());
         float dy = Math.abs(this.y - other.getY());
-
-        if (contour.isPresent()) {
-            float L = contour.get();
-            dx = Math.min(dx, L - dx);
-            dy = Math.min(dy, L - dy);
-        }
-
-        return (float) Math.sqrt(dx * dx + dy * dy) - (this.r + other.getR());
+        return (float) Math.hypot(dx, dy) - (this.r + other.getR());
     }
 
     @Override
-    public boolean collidesWith(Entity2D other) {
-        float dx = this.x - other.getX();
-        float dy = this.y - other.getY();
-        float centerDistance = (float) Math.sqrt(dx * dx + dy * dy);
+    public float euclideanDistance(Entity2D other, float length) {
+        float dx = Math.abs(this.x - other.getX());
+        float dy = Math.abs(this.y - other.getY());
 
-        // Collides if distance between centers is less than or equal to sum of radii
-        return (centerDistance - (this.r + other.getR())) <= 0;
+        // Periodic boundary condition distance
+        dx = Math.min(dx, length - dx);
+        dy = Math.min(dy, length - dy);
+
+        return (float) Math.hypot(dx, dy) - (this.r + other.getR());
+    }
+
+    @Override
+    public SizedParticle move(float deltaTime, float newAngle) {
+        float nextX = x + v * (float) Math.cos(angle) * deltaTime;
+        float nextY = y + v * (float) Math.sin(angle) * deltaTime;
+        return new SizedParticle(nextX, nextY, r, v, newAngle);
+    }
+
+    @Override
+    public SizedParticle move(float deltaTime, float newAngle, float contourLength) {
+        float rawX = x + v * (float) Math.cos(angle) * deltaTime;
+        float rawY = y + v * (float) Math.sin(angle) * deltaTime;
+
+        // Toroidal Wrapping
+        float nextX = (rawX % contourLength + contourLength) % contourLength;
+        float nextY = (rawY % contourLength + contourLength) % contourLength;
+
+        return new SizedParticle(nextX, nextY, r, v, newAngle);
+    }
+
+    // --- Getters & Overrides ---
+
+    @Override
+    public boolean collidesWith(Entity2D other) {
+        return euclideanDistance(other) <= 0;
     }
 
     @Override
     public boolean existsIn(float minX, float minY, float maxX, float maxY) {
-        // Find the point on the cell bounding box closest to the circle's center
         float closestX = Math.clamp(this.x, minX, maxX);
         float closestY = Math.clamp(this.y, minY, maxY);
-
-        // Calculate the squared distance between the circle's center and this closest point
         float dx = this.x - closestX;
         float dy = this.y - closestY;
-
         return (dx * dx + dy * dy) <= (this.r * this.r);
     }
 
-    @Override
-    public SizedParticle getNewPositionStandard(float deltaTime, float eta, Random random) {
-
-        float dx = v * (float) Math.cos(angle);
-        float dy = v * (float) Math.sin(angle);
-
-        float radius_sin_accum = (float) Math.sin(angle);
-        float radius_cos_accum = (float) Math.cos(angle);
-        int count = 1;
-
-        for (Entity2D p : neighbors){
-            // if collidesWith este paso podria ser innecesario. Evaluar eso.
-                radius_cos_accum = (float) (radius_cos_accum + Math.cos(p.getAngle()));
-                radius_sin_accum = (float) (radius_sin_accum + Math.sin(p.getAngle()));
-                count++;
-        }
-        float deltaTheta = (random.nextFloat() - 0.5f) * eta;
-        float newAngle = (float)(Math.atan2(radius_sin_accum/count,radius_cos_accum/count))+deltaTheta;
-
-        return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
-    }
-
-    @Override
-    public SizedParticle getNewPositionVotante(float deltaTime, float eta, Random random) {
-        float dx = v * (float) Math.cos(angle);
-        float dy = v * (float) Math.sin(angle);
-
-
-        float deltaTheta = (random.nextFloat() - 0.5f) * eta;
-        float newAngle = this.angle;
-        if (!neighbors.isEmpty()) {
-            newAngle = new ArrayList<>(neighbors)
-                    .get(random.nextInt(neighbors.size())).getAngle() + deltaTheta;
-        }
-        return new SizedParticle(x + dx * deltaTime,y + dy * deltaTime,r,v, newAngle);
-    }
-
-
-        @Override
-    public float getMinX() {
-        return x-r;
-    }
-
-    @Override
-    public float getMaxX() {
-        return x+r;
-    }
-
-    @Override
-    public float getMinY() {
-        return y-r;
-    }
-
-    @Override
-    public float getMaxY() {
-        return y+r;
-    }
-
-    @Override
-    public float getR() {return r;}
-
-    @Override
-    public float getX() {return x;}
-
-    @Override
-    public float getY() {return y;}
-
-    @Override
-    public float getAngle() {
-        return angle;
-    }
-
-    public float getV() {
-        return v;
-    }
-
-    @Override
-    public Set<Entity2D> getNeighbors() {
-        return neighbors;
-    }
+    @Override public float getMinX() { return x - r; }
+    @Override public float getMaxX() { return x + r; }
+    @Override public float getMinY() { return y - r; }
+    @Override public float getMaxY() { return y + r; }
+    @Override public float getR() { return r; }
+    @Override public float getX() { return x; }
+    @Override public float getY() { return y; }
+    @Override public float getAngle() { return angle; }
+    public float getV() { return v; }
+    @Override public Set<Entity2D> getNeighbors() { return neighbors; }
 
     @Override
     public String toString() {
