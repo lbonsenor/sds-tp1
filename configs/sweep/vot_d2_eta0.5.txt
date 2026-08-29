@@ -1,5 +1,5 @@
 # Sweep run: model=voter density=2 (n=200) eta=0.5
---model=voter
+--model=VOTER
 --length=10
 --contour
 --delta-t=1

@@ -1,5 +1,5 @@
 # Sweep run: model=standard density=4 (n=400) eta=1.5
---model=standard
+--model=STANDARD
 --length=10
 --contour
 --delta-t=1
