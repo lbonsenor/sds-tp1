@@ -8,12 +8,25 @@ import java.util.*;
 public class RandomParticleGenerator {
 
     private static final int MAX_ATTEMPTS_PER_PARTICLE = 10_000;
-    private static final float V_MODULE = (float) 0.03;
+    private static final float V_MODULE = 0.03f;
 
     public static Set<SizedParticle> generate(int n, float l, float rMin, float rMax, int seed) {
         Set<SizedParticle> particles = new HashSet<>();
+        Random random = new Random(seed);
 
-        // Cell size >= 2 * rMax guarantees checking only the 3x3 neighboring cells is sufficient
+        // Point particles path (rMin == 0 and rMax == 0)
+        if (rMax == 0) {
+            for (int i = 0; i < n; i++) {
+                float x = random.nextFloat() * l;
+                float y = random.nextFloat() * l;
+                float angle = (float) (random.nextDouble() * 2 * Math.PI); // Native radians [0, 2pi)
+
+                particles.add(new SizedParticle(x, y, 0.0f, V_MODULE, angle));
+            }
+            return particles;
+        }
+
+        // Hard-sphere particles initialization (if r > 0)
         float cellSize = 2 * rMax;
         int gridDim = Math.max(1, (int) Math.ceil(l / cellSize));
 
@@ -25,8 +38,6 @@ public class RandomParticleGenerator {
             }
         }
 
-        Random random = new Random(seed);
-
         for (int i = 0; i < n; i++) {
             boolean placed = false;
             int attempts = 0;
@@ -34,13 +45,12 @@ public class RandomParticleGenerator {
             while (!placed && attempts < MAX_ATTEMPTS_PER_PARTICLE) {
                 attempts++;
 
-                // Uniformly sample within valid boundary bounds [r, l - r]
                 float r = rMin + random.nextFloat() * (rMax - rMin);
                 float x = r + random.nextFloat() * (l - 2 * r);
                 float y = r + random.nextFloat() * (l - 2 * r);
-                float angle = random.nextFloat() * 360;
+                float angle = (float) (random.nextDouble() * 2 * Math.PI); // Native radians [0, 2pi)
 
-                SizedParticle p = new SizedParticle(x, y, r,V_MODULE, angle);
+                SizedParticle p = new SizedParticle(x, y, r, V_MODULE, angle);
 
                 int cellX = Math.min((int) (x / cellSize), gridDim - 1);
                 int cellY = Math.min((int) (y / cellSize), gridDim - 1);

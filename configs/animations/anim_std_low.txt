@@ -11,5 +11,5 @@
 --entire-t=600
 -n=400
 --iterations=1
---seed=42
+--seed=7225
 --run-prefix=anim_std_low

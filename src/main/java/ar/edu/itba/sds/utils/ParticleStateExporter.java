@@ -20,15 +20,13 @@ public class ParticleStateExporter {
             double x = p.getX();
             double y = p.getY();
             double radius = p.getR();
-            double theta = p.getAngle();
-            // Note: If p is a SizedParticle, extract v directly; otherwise default or cast safely
+            double theta = p.getAngle(); // Stored natively in radians
+
             double v = (p instanceof SizedParticle sp) ? sp.getV() : 0.0;
-            double vx = v * Math.cos(theta);
+            double vx = v * Math.cos(theta); // Computes velocity using radians
             double vy = v * Math.sin(theta);
             String neighborsStr = formatNeighbors(p.getNeighbors(), particleIndices);
 
-            // Built via setters (not the positional constructor) so field order in
-            // ParticlePoint can change without silently swapping values here.
             ParticlePoint point = new ParticlePoint();
             point.setRunId(runId);
             point.setT(t);
@@ -37,7 +35,7 @@ public class ParticleStateExporter {
             point.setY(y);
             point.setVx(vx);
             point.setVy(vy);
-            point.setTheta(theta);
+            point.setTheta(theta); // Stored in telemetry as radians
             point.setRadius(radius);
             point.setNeighbors(neighborsStr);
 
@@ -47,7 +45,6 @@ public class ParticleStateExporter {
     }
 
     private Map<Entity2D, Integer> buildIndexMap(List<Entity2D> particleList) {
-        // IdentityHashMap uses reference equality (==), ideal for tracking step-specific instances
         Map<Entity2D, Integer> indices = new IdentityHashMap<>(particleList.size());
         for (int i = 0; i < particleList.size(); i++) {
             indices.put(particleList.get(i), i);
