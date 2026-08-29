@@ -37,6 +37,6 @@ public class TelemetryCollector {
         CsvExporter.exportTelemetry(executionTimes, "execution_times_cim.csv", true);
         CsvExporter.exportTelemetry(timeObservables, "time_observables.csv", true);
         CsvExporter.exportTelemetry(clusterDetails, "cluster_details.csv", true);
-        CsvExporter.exportTelemetry(particlePoints, "particle_data.csv", true);
+        CsvExporter.exportTelemetry(particlePoints, "particle_data.csv", false);
     }
 }
