@@ -38,4 +38,4 @@ def animate_run(target_run_identifier: str) -> None:
 
 
 if __name__ == "__main__":
-    animate_run("anim_std_low")
+    animate_run("anim_vot_low")
