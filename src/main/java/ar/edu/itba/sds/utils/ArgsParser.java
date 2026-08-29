@@ -56,16 +56,31 @@ public class ArgsParser implements Runnable {
     @Option(names = {"--model"}, description = "Flocking model type", defaultValue = "STANDARD")
     private FlockingModel model;
 
+    @Option(names = {"-i", "--iterations"}, description = "Number of simulation iterations", defaultValue = "1")
+    private int iterations;
+
+    @Option(names = {"--run-prefix"}, description = "Prefix of the run_id", defaultValue = "")
+    private String prefix;
+
     @Override
     public void run() {
         int splitFactor = getM();
-        String runId = RUN_ID_FORMATTER.format(Instant.now());
 
-        RunConfig config = new RunConfig(
-                runId, model, l, rc, riMin, riMax, splitFactor, n, contour, deltaT, entireT, eta, seed
-        );
+        String prefixPart = "";
+        if (prefix != null && !prefix.isBlank()) {
+            prefixPart = prefix.endsWith("_") ? prefix : prefix + "_";
+        }
 
-        new SimulationRunner(config).execute();
+        for (int i = 0; i < iterations; i++) {
+            String runId = prefixPart + RUN_ID_FORMATTER.format(Instant.now()) + "_run" + i;
+            long currentSeed = seed + i; // Lo hago para que no sean iguales
+
+            RunConfig config = new RunConfig(
+                    runId, model, l, rc, riMin, riMax, splitFactor, n, contour, deltaT, entireT, eta, currentSeed
+            );
+
+            new SimulationRunner(config).execute();
+        }
     }
 
     public int getM() {

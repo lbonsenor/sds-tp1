@@ -33,10 +33,10 @@ public class TelemetryCollector {
     }
 
     public void exportAll(RunConfig config) {
-        CsvExporter.exportTelemetry(List.of(config), "run_config.csv");
-        CsvExporter.exportTelemetry(executionTimes, "execution_times_cim.csv");
-        CsvExporter.exportTelemetry(timeObservables, "time_observables.csv");
-        CsvExporter.exportTelemetry(clusterDetails, "cluster_details.csv");
-        CsvExporter.exportTelemetry(particlePoints, "particle_data.csv");
+        CsvExporter.exportTelemetry(List.of(config), "run_config.csv", true);
+        CsvExporter.exportTelemetry(executionTimes, "execution_times_cim.csv", true);
+        CsvExporter.exportTelemetry(timeObservables, "time_observables.csv", true);
+        CsvExporter.exportTelemetry(clusterDetails, "cluster_details.csv", true);
+        CsvExporter.exportTelemetry(particlePoints, "particle_data.csv", true);
     }
 }
