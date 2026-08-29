@@ -32,45 +32,64 @@ public class ParticlePoint {
     private double radius;
 
     @CsvBindByName(column = "neighbors")
-    private String neighbors;
+    private String neighbors; // e.g. semicolon-separated particle_id list, used to reconstruct clusters offline
 
     public ParticlePoint() {
     }
 
-    public ParticlePoint(String runId, double t, int particleId, double x, double y, double radius, String neighbors, double theta, double vx, double vy) {
+    public ParticlePoint(String runId, double t, int particleId, double x, double y, double vx, double vy,
+                         double theta, double radius, String neighbors) {
         this.runId = runId;
         this.t = t;
         this.particleId = particleId;
         this.x = x;
         this.y = y;
-        this.radius = radius;
-        this.neighbors = neighbors;
-        this.theta = theta;
         this.vx = vx;
         this.vy = vy;
-
+        this.theta = theta;
+        this.radius = radius;
+        this.neighbors = neighbors;
     }
 
-    public String getRunId() { return runId; }
-    public void setRunId(String runId) { this.runId = runId; }
+    public String getRunId() {
+        return runId;
+    }
 
-    public double getT() { return t; }
-    public void setT(double t) { this.t = t; }
+    public void setRunId(String runId) {
+        this.runId = runId;
+    }
 
-    public int getParticleId() { return particleId; }
-    public void setParticleId(int particleId) { this.particleId = particleId; }
+    public double getT() {
+        return t;
+    }
 
-    public double getX() { return x; }
-    public void setX(double x) { this.x = x; }
+    public void setT(double t) {
+        this.t = t;
+    }
 
-    public double getY() { return y; }
-    public void setY(double y) { this.y = y; }
+    public int getParticleId() {
+        return particleId;
+    }
 
-    public double getRadius() { return radius; }
-    public void setRadius(double radius) { this.radius = radius; }
+    public void setParticleId(int particleId) {
+        this.particleId = particleId;
+    }
 
-    public String getNeighbors() { return neighbors; }
-    public void setNeighbors(String neighbors) { this.neighbors = neighbors; }
+    public double getX() {
+        return x;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public double getY() {
+        return y;
+    }
+
+    public void setY(double y) {
+        this.y = y;
+    }
 
     public double getVx() {
         return vx;
@@ -94,5 +113,37 @@ public class ParticlePoint {
 
     public void setTheta(double theta) {
         this.theta = theta;
+    }
+
+    public double getRadius() {
+        return radius;
+    }
+
+    public void setRadius(double radius) {
+        this.radius = radius;
+    }
+
+    public String getNeighbors() {
+        return neighbors;
+    }
+
+    public void setNeighbors(String neighbors) {
+        this.neighbors = neighbors;
+    }
+
+    @Override
+    public String toString() {
+        return "ParticlePoint{" +
+                "runId='" + runId + '\'' +
+                ", t=" + t +
+                ", particleId=" + particleId +
+                ", x=" + x +
+                ", y=" + y +
+                ", vx=" + vx +
+                ", vy=" + vy +
+                ", theta=" + theta +
+                ", radius=" + radius +
+                ", neighbors='" + neighbors + '\'' +
+                '}';
     }
 }

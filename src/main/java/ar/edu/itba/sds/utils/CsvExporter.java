@@ -9,6 +9,7 @@ import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
 
@@ -16,30 +17,24 @@ public class CsvExporter {
 
     private static final String TELEMETRY_DIR = "telemetry";
 
-    /**
-     * Single generic method to export any record/bean type to CSV.
-     * OpenCSV extracts headers automatically from class annotations (@CsvBindByName).
-     */
     public static <T> void exportTelemetry(Collection<T> records, File targetFile, boolean append) {
         ensureDirectoryExists(targetFile.getParent());
 
-        // Check if file exists and is non-empty before opening the writer
         boolean fileExists = targetFile.exists() && targetFile.length() > 0;
+        boolean skipHeader = append && fileExists;
+
+        String csvContent = renderToCsv(records);
+        if (csvContent == null) {
+            return; // error already logged in renderToCsv
+        }
+        if (skipHeader) {
+            csvContent = stripFirstLine(csvContent);
+        }
 
         try (Writer writer = new FileWriter(targetFile, append)) {
-            StatefulBeanToCsvBuilder<T> builder = new StatefulBeanToCsvBuilder<T>(writer)
-                    .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-                    .withSeparator(',');
-
-            // If appending to an existing file, suppress writing the headers
-            if (append && fileExists) {
-                builder.withOrderedResults(true); // Ensures column alignment matches
-            }
-
-            StatefulBeanToCsv<T> beanToCsv = builder.build();
-            beanToCsv.write(records.iterator());
-        } catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-            System.err.println("Error exporting telemetry records: " + e.getMessage());
+            writer.write(csvContent);
+        } catch (IOException e) {
+            System.err.println("Error writing telemetry records: " + e.getMessage());
         }
     }
 
@@ -48,6 +43,26 @@ public class CsvExporter {
      */
     public static <T> void exportTelemetry(Collection<T> records, String fileName, boolean append) {
         exportTelemetry(records, new File(TELEMETRY_DIR, fileName), append);
+    }
+
+    private static <T> String renderToCsv(Collection<T> records) {
+        StringWriter buffer = new StringWriter();
+        try {
+            StatefulBeanToCsv<T> beanToCsv = new StatefulBeanToCsvBuilder<T>(buffer)
+                    .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+                    .withSeparator(',')
+                    .build();
+            beanToCsv.write(records.iterator());
+        } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
+            System.err.println("Error exporting telemetry records: " + e.getMessage());
+            return null;
+        }
+        return buffer.toString();
+    }
+
+    private static String stripFirstLine(String csvContent) {
+        int firstNewline = csvContent.indexOf('\n');
+        return firstNewline >= 0 ? csvContent.substring(firstNewline + 1) : "";
     }
 
     private static void ensureDirectoryExists(String path) {

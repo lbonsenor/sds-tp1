@@ -17,20 +17,31 @@ public class ParticleStateExporter {
         for (int i = 0; i < particleList.size(); i++) {
             Entity2D p = particleList.get(i);
 
-            // Direct getter calls
             double x = p.getX();
             double y = p.getY();
             double radius = p.getR();
             double theta = p.getAngle();
-
             // Note: If p is a SizedParticle, extract v directly; otherwise default or cast safely
             double v = (p instanceof SizedParticle sp) ? sp.getV() : 0.0;
             double vx = v * Math.cos(theta);
             double vy = v * Math.sin(theta);
-
             String neighborsStr = formatNeighbors(p.getNeighbors(), particleIndices);
 
-            points.add(new ParticlePoint(runId, t, i, x, y, radius, neighborsStr, theta, vx, vy));
+            // Built via setters (not the positional constructor) so field order in
+            // ParticlePoint can change without silently swapping values here.
+            ParticlePoint point = new ParticlePoint();
+            point.setRunId(runId);
+            point.setT(t);
+            point.setParticleId(i);
+            point.setX(x);
+            point.setY(y);
+            point.setVx(vx);
+            point.setVy(vy);
+            point.setTheta(theta);
+            point.setRadius(radius);
+            point.setNeighbors(neighborsStr);
+
+            points.add(point);
         }
         return points;
     }
@@ -50,7 +61,6 @@ public class ParticleStateExporter {
                 .filter(Objects::nonNull)
                 .map(String::valueOf)
                 .collect(Collectors.joining(" "));
-
         return ids.isEmpty() ? "none" : "[" + ids + "]";
     }
 }
