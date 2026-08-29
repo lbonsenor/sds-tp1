@@ -1,9 +1,10 @@
+import argparse
 from pathlib import Path
 import matplotlib.pyplot as plt
-from visualizer.animate import animate_particles
+from visualizer.anim.animate import animate_particles
 from visualizer.parser import ParticleDataParser, RunConfigParser
 
-ROOT_DIR = Path(__file__).resolve().parents[3]
+ROOT_DIR = Path(__file__).resolve().parents[4]
 TELEMETRY_DIR = ROOT_DIR / "telemetry"
 
 
@@ -38,4 +39,13 @@ def animate_run(target_run_identifier: str) -> None:
 
 
 if __name__ == "__main__":
-    animate_run("anim_vot_low")
+    parser = argparse.ArgumentParser(description="Animate particle telemetry for a given run identifier.")
+    parser.add_argument(
+        "target_run_identifier",
+        nargs="?",
+        default="anim_vot_low",
+        help="Run ID or prefix to animate (default: 'anim_vot_low')",
+    )
+    args = parser.parse_args()
+
+    animate_run(args.target_run_identifier)
