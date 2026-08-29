@@ -1,0 +1,15 @@
+# Sweep run: model=voter density=8 (n=800) eta=6.0
+--model=voter
+--length=10
+--contour
+--delta-t=1
+--cut-off=1.0
+-m=7
+--min-radius=0.115
+--max-radius=0.13
+--eta=6.0
+--entire-t=300
+-n=800
+--iterations=5
+--seed=42
+--run-prefix=vot_d8_eta6.0

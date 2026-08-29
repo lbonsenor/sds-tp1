@@ -3,8 +3,8 @@ from .run_config import RunConfigParser, RunConfigRecord
 from .execution_time import ExecutionTimeParser, ExecutionTimeRecord
 from .time_observable import TimeObservableParser, TimeObservableRecord
 from .cluster_detail import ClusterDetailParser, ClusterDetailRecord
-from .trajectory import TrajectoryParser, TrajectoryRecord
 from .particle_data import ParticleDataParser, ParticleDataRecord
+from .run_id import RunIdComponents, parse_run_id, run_prefix
 
 __all__ = [
     "BaseCsvParser",
@@ -16,8 +16,9 @@ __all__ = [
     "TimeObservableRecord",
     "ClusterDetailParser",
     "ClusterDetailRecord",
-    "TrajectoryParser",
-    "TrajectoryRecord",
     "ParticleDataParser",
     "ParticleDataRecord",
+    "RunIdComponents",
+    "parse_run_id",
+    "run_prefix",
 ]

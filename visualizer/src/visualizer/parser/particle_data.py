@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from typing import List, Union
 import pandas as pd
 from .base_parser import BaseCsvParser
@@ -13,6 +12,9 @@ class ParticleDataRecord:
     particle_id: int
     x: float
     y: float
+    vx: float
+    vy: float
+    theta: float
     radius: float
     neighbors_raw: str
     neighbors_list: List[int]
@@ -32,6 +34,9 @@ class ParticleDataParser(BaseCsvParser[ParticleDataRecord]):
                 particle_id=int(row["particle_id"]),
                 x=float(row["x"]),
                 y=float(row["y"]),
+                vx=float(row["vx"]),
+                vy=float(row["vy"]),
+                theta=float(row["theta"]),
                 radius=float(row["radius"]),
                 neighbors_raw=raw_neighbors,
                 neighbors_list=n_list,
@@ -39,6 +44,14 @@ class ParticleDataParser(BaseCsvParser[ParticleDataRecord]):
             )
             records.append(record)
         return records
+
+    def get_particle_trajectory(self, particle_id: int) -> List[ParticleDataRecord]:
+        """Filters entries for a specific particle across all timesteps (for animation)."""
+        return [r for r in self.records if r.particle_id == particle_id]
+
+    def get_state_at_time(self, time: float) -> List[ParticleDataRecord]:
+        """Returns the full-system snapshot at a specific timestep (for cluster reconstruction)."""
+        return [r for r in self.records if r.time == time]
 
     @staticmethod
     def _parse_neighbors(val: Union[str, float]) -> List[int]:

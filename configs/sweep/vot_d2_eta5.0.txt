@@ -1,0 +1,15 @@
+# Sweep run: model=voter density=2 (n=200) eta=5.0
+--model=voter
+--length=10
+--contour
+--delta-t=1
+--cut-off=1.0
+-m=7
+--min-radius=0.115
+--max-radius=0.13
+--eta=5.0
+--entire-t=300
+-n=200
+--iterations=5
+--seed=42
+--run-prefix=vot_d2_eta5.0
