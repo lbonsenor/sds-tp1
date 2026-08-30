@@ -22,11 +22,17 @@ def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: 
         for model in ordered_models(panel["model"]):
             points = panel.loc[panel["model"] == model].sort_values("eta")
             style = model_style(model)
+            
+            # Error Estándar de la Media para ambos ejes
+            n_replicas = np.maximum(points["replicas"].to_numpy(), 1)
+            s_se = points["s_std"].fillna(0.0).to_numpy() / np.sqrt(n_replicas)
+            va_se = points["va_std"].fillna(0.0).to_numpy() / np.sqrt(n_replicas)
+            
             axis.errorbar(
                 points["s_mean"],
                 points["va_mean"],
-                xerr=points["s_std"].fillna(0.0),
-                yerr=points["va_std"].fillna(0.0),
+                xerr=s_se,
+                yerr=va_se,
                 label=model_label(model),
                 capsize=3,
                 linewidth=1.5,

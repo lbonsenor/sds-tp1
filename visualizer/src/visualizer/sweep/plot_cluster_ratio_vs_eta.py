@@ -1,13 +1,4 @@
-"""Figure (d), second half, and its requested Estándar-Votante comparison (f).
-
-FIX vs. the original TP2 script: ``plot_cluster_ratio_vs_eta`` used to save
-one *separate* file per model (``cluster_ratio_vs_eta_standard.png`` and
-``..._voter.png``), so the comparison requested by point (f) of the
-enunciado never actually happened for this observable, unlike
-``polarizacion_vs_eta`` which always overlaid both models. This module now
-mirrors ``plot_polarization_vs_eta`` exactly: one panel per density, both
-models overlaid in each panel, in a single ``cluster_ratio_vs_eta.png``.
-"""
+"""Figure (d), second half, and its requested Estándar-Votante comparison (f)."""
 
 from __future__ import annotations
 
@@ -30,11 +21,16 @@ def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: 
         panel = bundle.steady_summary.loc[np.isclose(bundle.steady_summary["density"], density)]
         for model in ordered_models(panel["model"]):
             curve = panel.loc[panel["model"] == model].sort_values("eta")
+            
+            # Error Estándar de la Media (SE) manteniendo el tipo pandas.Series
+            n_replicas = curve["replicas"].clip(lower=1)
+            s_se = curve["s_std"] / np.sqrt(n_replicas)
+            
             errorbar(
                 axis,
                 curve["eta"],
                 curve["s_mean"],
-                curve["s_std"],
+                s_se,
                 label=model_label(model),
                 **model_style(model),
             )

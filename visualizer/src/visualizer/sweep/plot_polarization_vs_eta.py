@@ -1,8 +1,4 @@
-"""Figure (c) and its requested Estándar-Votante comparison (f).
-
-One panel per density; both models are overlaid in every panel so the
-required comparison is visible directly in this single figure.
-"""
+"""Figure (c) and its requested Estándar-Votante comparison (f)."""
 
 from __future__ import annotations
 
@@ -25,11 +21,16 @@ def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: 
         panel = bundle.steady_summary.loc[np.isclose(bundle.steady_summary["density"], density)]
         for model in ordered_models(panel["model"]):
             curve = panel.loc[panel["model"] == model].sort_values("eta")
+            
+            # Error Estándar de la Media (SE) manteniendo el tipo pandas.Series
+            n_replicas = curve["replicas"].clip(lower=1)
+            va_se = curve["va_std"] / np.sqrt(n_replicas)
+            
             errorbar(
                 axis,
                 curve["eta"],
                 curve["va_mean"],
-                curve["va_std"],
+                va_se,
                 label=model_label(model),
                 **model_style(model),
             )
