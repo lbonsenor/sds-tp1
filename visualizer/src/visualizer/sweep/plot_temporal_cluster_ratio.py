@@ -61,7 +61,7 @@ def generate(
                 if start is not None:
                     axis.axvline(start, color="black", linestyle=":", linewidth=1.3)
                 axis.set_title(f"$\\eta={number_label(eta)}$")
-                set_fraction_axis(axis, "Fracción gigante $S$")
+                set_fraction_axis(axis, "Fracción gigante S")
 
             figure.suptitle(
                 f"Evolución temporal de $S$ - {model_label(model)} ($\\rho={number_label(density)}$)",

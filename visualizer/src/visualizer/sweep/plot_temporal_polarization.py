@@ -74,7 +74,7 @@ def generate(
                     label="Inicio estacionario",
                 )
             axis.set_title(f"$\\eta={number_label(eta)}$")
-            set_fraction_axis(axis, "Polarización $v_a$")
+            set_fraction_axis(axis, "Polarización va")
             axis.legend(fontsize=8)
 
         figure.suptitle(

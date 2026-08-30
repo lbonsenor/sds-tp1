@@ -40,11 +40,11 @@ def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: 
                 **style,
             )
         axis.set_title(f"$\\rho={number_label(density)}$")
-        axis.set_xlabel("Fracción gigante estacionaria $\\langle S \\rangle$")
-        axis.grid(True, alpha=0.28)
+        axis.set_xlabel("Fracción gigante estacionaria S")
+        # axis.grid(True, alpha=0.28)
         axis.legend(fontsize=8)
 
-    axes.flat[0].set_ylabel("Polarización estacionaria $\\langle v_a \\rangle$")
+    axes.flat[0].set_ylabel("Polarización estacionaria va")
     axes.flat[0].set_xlim(-0.04, 1.04)
     axes.flat[0].set_ylim(-0.04, 1.04)
     figure.suptitle("Polarización en función de la componente gigante", y=1.03)

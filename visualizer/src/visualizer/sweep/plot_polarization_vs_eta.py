@@ -35,11 +35,11 @@ def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: 
                 **model_style(model),
             )
         axis.set_title(f"$\\rho={number_label(density)}$")
-        axis.set_xlabel("Ruido $\\eta$")
-        axis.grid(True, alpha=0.28)
+        axis.set_xlabel("Ruido eta")
+        # axis.grid(True, alpha=0.28)
         axis.legend(fontsize=8)
 
-    axes.flat[0].set_ylabel("Polarización estacionaria media $\\langle v_a \\rangle$")
+    axes.flat[0].set_ylabel("Polarización estacionaria media va")
     axes.flat[0].set_ylim(-0.04, 1.04)
     figure.suptitle("Polarización estacionaria en función del ruido", y=1.03)
     figure.tight_layout()

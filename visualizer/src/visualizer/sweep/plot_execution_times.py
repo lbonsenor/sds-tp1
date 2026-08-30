@@ -141,9 +141,9 @@ def generate(
             "comparación con TP1 que pide el punto (g) del enunciado."
         )
 
-    axis.set_xlabel("Número de partículas $N$")
-    axis.set_ylabel("Tiempo medio por paso [ms]")
-    axis.grid(True, alpha=0.28)
+    axis.set_xlabel("Número de partículas N")
+    axis.set_ylabel("Tiempo medio por paso (ms)")
+    # axis.grid(True, alpha=0.28)
     axis.legend(fontsize=8)
     axis.set_title("Tiempo de ejecución del CIM")
     if len(plotted_n_particles) > 1:

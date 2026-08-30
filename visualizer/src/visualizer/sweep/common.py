@@ -100,10 +100,10 @@ def errorbar(ax: maxes.Axes, x: pd.Series, y: pd.Series, yerr: pd.Series, **kwar
 
 
 def set_fraction_axis(ax: maxes.Axes, ylabel: str) -> None:
-    ax.set_xlabel("Tiempo $t$")
+    ax.set_xlabel("Tiempo t (s)")
     ax.set_ylabel(ylabel)
     ax.set_ylim(-0.04, 1.04)
-    ax.grid(True, alpha=0.28)
+    # ax.grid(True, alpha=0.28)
 
 
 def save_figure(
