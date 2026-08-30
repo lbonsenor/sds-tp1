@@ -46,9 +46,9 @@ def animate_particles(
     ax.set_xlim(0, box_length)
     ax.set_ylim(0, box_length)
     ax.set_aspect("equal")
-    ax.set_xlabel("X Position")
-    ax.set_ylabel("Y Position")
-    ax.set_title(f"Particle Flocking Dynamics | Run: {run_id}")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title(f"Run: {run_id}")
 
     norm = Normalize(vmin=-np.pi, vmax=np.pi)
     cmap = plt.get_cmap("hsv")
@@ -66,7 +66,7 @@ def animate_particles(
         zorder=3,
     )
     cbar = fig.colorbar(scat, ax=ax, shrink=0.8)
-    cbar.set_label("Angle (rad)")
+    cbar.set_label("Ángulo (rad)")
 
     quiver = None
     if show_vectors:

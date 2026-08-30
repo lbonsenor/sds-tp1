@@ -5,8 +5,6 @@
 --delta-t=1
 --cut-off=1.0
 -m=7
---min-radius=0.115
---max-radius=0.13
 --eta=2.5
 --entire-t=300
 -n=800

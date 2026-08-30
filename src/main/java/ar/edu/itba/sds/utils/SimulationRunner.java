@@ -1,16 +1,17 @@
 package ar.edu.itba.sds.utils;
 
 import ar.edu.itba.sds.model.entities.Entity2D;
+import ar.edu.itba.sds.model.entities.Particle;
 import ar.edu.itba.sds.model.entities.SizedParticle;
+import ar.edu.itba.sds.model.flocking.FlockingStrategy;
+import ar.edu.itba.sds.model.flocking.VicsekStandardStrategy;
+import ar.edu.itba.sds.model.flocking.VoterStrategy;
 import ar.edu.itba.sds.model.telemetry.ClusterDetail;
 import ar.edu.itba.sds.model.telemetry.ExecutionTime;
 import ar.edu.itba.sds.model.telemetry.RunConfig;
 import ar.edu.itba.sds.model.telemetry.TimeObservable;
 import ar.edu.itba.sds.service.CellIndexService;
 import ar.edu.itba.sds.service.OffLatticeService;
-import ar.edu.itba.sds.model.flocking.FlockingStrategy;
-import ar.edu.itba.sds.model.flocking.VicsekStandardStrategy;
-import ar.edu.itba.sds.model.flocking.VoterStrategy;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -40,21 +41,26 @@ public class SimulationRunner {
     }
 
     public void execute() {
+        if (config.getMinRadius() == 0.0f && config.getMaxRadius() == 0.0f) {
+            runSimulation((x, y, r, v, angle) -> new Particle(x, y, v, angle));
+        } else {
+            runSimulation(SizedParticle::new);
+        }
+    }
+
+    private <T extends Entity2D> void runSimulation(RandomParticleGenerator.ParticleFactory<T> factory) {
         Random random = new Random(config.getSeed());
-        Set<SizedParticle> particles = RandomParticleGenerator.generate(
+
+        Set<T> particles = RandomParticleGenerator.generate(
                 config.getNParticles(),
                 config.getLength(),
                 config.getMinRadius(),
                 config.getMaxRadius(),
-                random.nextInt()
+                random.nextInt(),
+                factory
         );
 
-        System.out.println("N particles: " + particles.size());
-        System.out.println("Grid size: " + config.getLength() + " x " + config.getLength());
-        System.out.println("m: " + config.getCellGridSplit());
-        System.out.println("r: " + config.getCutOff());
-
-        CellIndexService<SizedParticle> cellService = new CellIndexService<>(
+        CellIndexService<T> cellService = new CellIndexService<>(
                 config.getCellGridSplit(),
                 config.getLength(),
                 config.getCutOff(),
@@ -69,11 +75,11 @@ public class SimulationRunner {
         collector.exportAll(config);
     }
 
-    private Set<SizedParticle> step(
+    private <T extends Entity2D> Set<T> step(
             float t,
             int timestep,
-            Set<SizedParticle> particles,
-            CellIndexService<SizedParticle> cellService,
+            Set<T> particles,
+            CellIndexService<T> cellService,
             Random random
     ) {
         // 1. Calculate cell grid neighbors with timing
@@ -83,7 +89,6 @@ public class SimulationRunner {
 
         long executionTimeNs = Duration.between(start, end).toNanos();
         double executionTimeSec = executionTimeNs / 1_000_000_000.0;
-        System.out.println("Time taken to calculate neighbors: " + executionTimeNs + " ns");
 
         collector.recordExecutionTime(new ExecutionTime(
                 config.getRunId(),
@@ -124,7 +129,7 @@ public class SimulationRunner {
         );
     }
 
-    private void processObservables(float t, Set<SizedParticle> particles) {
+    private void processObservables(float t, Set<? extends Entity2D> particles) {
         double va = offLatticeService.getPolarization(particles);
         Set<Set<Entity2D>> clusters = offLatticeService.getClusters(particles);
 
@@ -141,9 +146,6 @@ public class SimulationRunner {
             }
             details.add(new ClusterDetail(config.getRunId(), t, clusterId++, size));
         }
-
-        System.out.println("Biggest Cluster size: " + maxClusterSize);
-        System.out.println("Biggest cluster: " + biggestCluster);
 
         collector.recordClusterDetails(details);
 

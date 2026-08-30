@@ -26,10 +26,10 @@ public class ArgsParser implements Runnable {
     @Option(names = {"-rc", "--cut-off"}, description = "Cut-off distance", defaultValue = "3.0")
     private float rc;
 
-    @Option(names = {"-ri-min", "--min-radius"}, description = "Minimum radius", defaultValue = "0.23")
+    @Option(names = {"-ri-min", "--min-radius"}, description = "Minimum radius", defaultValue = "0.0")
     private float riMin;
 
-    @Option(names = {"-ri-max", "--max-radius"}, description = "Maximum radius", defaultValue = "0.26")
+    @Option(names = {"-ri-max", "--max-radius"}, description = "Maximum radius", defaultValue = "0.0")
     private float riMax;
 
     @Option(names = {"-m"}, description = "Cell grid split factor")
