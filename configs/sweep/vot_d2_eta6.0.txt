@@ -4,10 +4,10 @@
 --contour
 --delta-t=1
 --cut-off=0.5
--m=7
+
 --eta=6.0
---entire-t=300
+--entire-t=2000
 -n=200
---iterations=5
---seed=42
+--iterations=3
+
 --run-prefix=vot_d2_eta6.0

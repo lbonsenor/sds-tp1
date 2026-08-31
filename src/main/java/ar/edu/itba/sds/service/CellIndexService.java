@@ -36,11 +36,11 @@ public class CellIndexService<T extends Entity2D> {
 
         // The Cell Index Method is only correct when a cell is large enough that two particles
         // in non-adjacent cells cannot be neighbors: L/M > rc + 2*rmax.
-        if (L / M <= rc + 2 * maxRadius) {
+        if ((double) L / M < rc + 2 * maxRadius) {
             throw new IllegalArgumentException(String.format(
-                    "M=%d exceeds the maximum allowed for this configuration: L/M=%.4f <= rc+2*rmax=%.4f. " +
+                    "M=%d exceeds the maximum allowed for this configuration: L/M=%.4f < rc+2*rmax=%.4f. " +
                             "The maximum permitted M is %d.",
-                    M, L / M, rc + 2 * maxRadius, (int) Math.floor(L / (rc + 2 * maxRadius))));
+                    M, (double) L / M, rc + 2 * maxRadius, (int) Math.floor(L / (rc + 2 * maxRadius) + 1e-9)));
         }
 
         this.cellSize = L / M;

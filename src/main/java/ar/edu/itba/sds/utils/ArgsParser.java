@@ -50,8 +50,8 @@ public class ArgsParser implements Runnable {
     @Option(names = {"--eta"}, description = "Noise parameter eta", defaultValue = "2.0")
     private float eta;
 
-    @Option(names = {"--seed", "-s"}, description = "Random seed for reproducibility", defaultValue = "42")
-    private long seed;
+    @Option(names = {"--seed", "-s"}, description = "Random seed for reproducibility")
+    private long seed = System.currentTimeMillis();
 
     @Option(names = {"--model"}, description = "Flocking model type", defaultValue = "STANDARD")
     private FlockingModel model;
@@ -85,7 +85,22 @@ public class ArgsParser implements Runnable {
 
     public int getM() {
         if (m == null) {
-            return (int) Math.floor(l / (rc + 2 * riMax));
+            double maxInteractionRadius = rc + 2 * riMax;
+
+            if (maxInteractionRadius <= 0) {
+                return 1;
+            }
+
+            // Add small epsilon to prevent precision issues (e.g., 19.99999999 -> 20.0)
+            double EPSILON = 1e-9;
+            int calculatedM = (int) Math.floor(((double) l / maxInteractionRadius) + EPSILON);
+
+            // Ensure boundary validation holds true
+            while (calculatedM > 1 && ((double) l / calculatedM) < maxInteractionRadius) {
+                calculatedM--;
+            }
+
+            return Math.max(1, calculatedM);
         }
         return m;
     }
