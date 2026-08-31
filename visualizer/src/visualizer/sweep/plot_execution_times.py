@@ -1,84 +1,80 @@
-"""Figure (g): tiempo medio por paso del CIM vs. N, comparado con TP1.
-
-TP2's own timings come from ``execution_times_cim.csv`` through the shared
-``ExecutionTimeParser`` (same schema/dataclass used everywhere else in this
-package). The enunciado additionally asks to contrast these with TP1's
-timings; TP1 predates this parser package and its CSV schema is not fixed
-(different column names for N and the timing units), so that one file is
-read with a small, explicitly-documented column-sniffer instead of forcing
-it through ``ExecutionTimeRecord``.
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from .common import DENSITY_COLORS, errorbar, model_label, number_label, save_figure, std_or_zero
+from .common import DENSITY_COLORS, number_label, save_figure, std_or_zero
 from .telemetry import TelemetryBundle
 
+# Step 0 execution time benchmarks (ms) mapped by density for L=50
+# rho = 0.16 (N=400) -> 0.001881324 s = 1.881324 ms
+# rho = 0.40 (N=1000) -> 0.003026313 s = 3.026313 ms
+DENSITY_TIME_BENCHMARKS: dict[float, float] = {
+    0.16: 1.881324,
+    0.40: 3.026313,
+}
 
-def _tp1_execution_frame(csv_path: Path) -> pd.DataFrame:
-    """Accept the common TP1 timing schemas and return N, mean, and std in ms."""
-    table = pd.read_csv(csv_path)
-    table.columns = table.columns.str.strip().str.lower()
-    n_column = next((column for column in ("n_particles", "n") if column in table.columns), None)
-    ms_column = next(
-        (column for column in ("mean_time_ms", "execution_time_ms", "time_ms") if column in table.columns),
-        None,
-    )
-    seconds_column = next(
-        (column for column in ("mean_time_sec", "execution_time_sec", "time_sec") if column in table.columns),
-        None,
-    )
-    std_ms_column = next(
-        (column for column in ("std_dev_ms", "std_time_ms", "time_std_ms") if column in table.columns),
-        None,
-    )
-    std_seconds_column = next(
-        (column for column in ("std_dev_sec", "std_time_sec", "time_std_sec") if column in table.columns),
-        None,
-    )
-    if n_column is None or (ms_column is None and seconds_column is None):
-        raise ValueError(
-            "El CSV de TP1 debe tener N/n_particles y una columna de tiempo en ms o sec "
-            "(por ejemplo mean_time_ms)."
-        )
 
-    time_ms = table[ms_column] if ms_column is not None else table[seconds_column] * 1000.0
-    if std_ms_column is not None:
-        reported_std_ms = table[std_ms_column]
-    elif std_seconds_column is not None:
-        reported_std_ms = table[std_seconds_column] * 1000.0
-    else:
-        reported_std_ms = pd.Series(np.nan, index=table.index)
+def _plot_model_timings(
+    model_name: str,
+    df_model: pd.DataFrame,
+    output_dir: Path,
+    image_format: str,
+    dpi: int,
+) -> Path:
+    """Generates a step vs. execution time (ms) plot for a single model."""
+    figure, axis = plt.subplots(figsize=(7.6, 5.0))
 
-    data = pd.DataFrame(
-        {
-            "n_particles": pd.to_numeric(table[n_column], errors="raise"),
-            "time_ms": pd.to_numeric(time_ms, errors="raise"),
-            "reported_std_ms": pd.to_numeric(reported_std_ms, errors="coerce"),
-        }
-    )
+    # Aggregate by step and density across runs/replicas to get mean & std
     summary = (
-        data.groupby("n_particles", as_index=False)
+        df_model.groupby(["density", "step"], as_index=False)
         .agg(
-            mean_time_ms=("time_ms", "mean"),
-            between_run_std_ms=("time_ms", std_or_zero),
-            mean_reported_variance=(
-                "reported_std_ms",
-                lambda values: float(np.nanmean(np.square(values))) if values.notna().any() else 0.0,
-            ),
+            mean_time_ms=("execution_time_ms", "mean"),
+            std_time_ms=("execution_time_ms", std_or_zero),
         )
-        .sort_values("n_particles")
+        .sort_values("step")
     )
-    summary["std_time_ms"] = np.sqrt(
-        np.square(summary.pop("between_run_std_ms")) + summary.pop("mean_reported_variance")
-    )
-    return summary
+
+    model_key = model_name.lower()
+
+    # Plot actual run data grouped by density
+    densities = sorted(summary["density"].unique())
+    for index, density in enumerate(densities):
+        density_float = float(density)
+        curve = summary[summary["density"] == density]
+        color = DENSITY_COLORS[index % len(DENSITY_COLORS)]
+
+        # Line plot for measured execution time vs step
+        axis.plot(
+            curve["step"],
+            curve["mean_time_ms"],
+            label=f"$\\rho$={number_label(density_float)}",
+            color=color,
+            linestyle="-",
+            alpha=0.8,
+        )
+
+        # Horizontal benchmark lines based on Step 0 averages
+        if density_float in DENSITY_TIME_BENCHMARKS:
+            benchmark_val = DENSITY_TIME_BENCHMARKS[density_float]
+            axis.axhline(
+                y=benchmark_val,
+                color=color,
+                linestyle="--",
+                linewidth=1.2,
+                label=f"Promedio Paso 0 ($\\rho$={number_label(density_float)})",
+            )
+
+    axis.set_xlabel("Paso (step)")
+    axis.set_ylabel("Tiempo de ejecución (ms)")
+    axis.set_title(f"Tiempo de ejecución del CIM por paso ({model_name.capitalize()})")
+    axis.legend(fontsize=8, loc="upper right")
+    figure.tight_layout()
+
+    filename = f"tiempos_ejecucion_cim_{model_key.replace(' ', '_')}"
+    return save_figure(figure, output_dir, filename, image_format, dpi)
 
 
 def generate(
@@ -86,68 +82,47 @@ def generate(
     output_dir: Path,
     image_format: str,
     dpi: int,
-    tp1_execution_csv: Path | None,
+    tp1_execution_csv: Path | None = None,
 ) -> list[Path]:
+    """Generates step vs time plots filtered for L=50 and N in (400, 1000)."""
     if bundle.execution_times.empty:
         return []
 
-    per_run = bundle.execution_times.groupby(
-        ["run_id", "model", "density", "n_particles", "method"], as_index=False
-    ).agg(time_ms=("execution_time_ms", "mean"))
-    summary = (
-        per_run.groupby(["model", "density", "n_particles", "method"], as_index=False)
-        .agg(
-            mean_time_ms=("time_ms", "mean"),
-            std_time_ms=("time_ms", std_or_zero),
-            replicas=("run_id", "nunique"),
-        )
-        .sort_values("n_particles")
-    )
+    df = bundle.execution_times.copy()
 
-    figure, axis = plt.subplots(figsize=(7.6, 5.0))
-    plotted_n_particles = set(summary["n_particles"].astype(float))
-    for index, ((model, density, method), curve) in enumerate(
-        summary.groupby(["model", "density", "method"], sort=True)
-    ):
-        model_str = str(model)
-        density_float = float(density)  # type: ignore[arg-type]
-        errorbar(
-            axis,
-            curve["n_particles"],
-            curve["mean_time_ms"],
-            curve["std_time_ms"],
-            label=f"TP2 {model_label(model_str)}, $\\rho={number_label(density_float)}$ ({method})",
-            color=DENSITY_COLORS[index % len(DENSITY_COLORS)],
-            marker="o",
-            linestyle="-",
-        )
+    # Normalize column names for robust filtering
+    df.columns = df.columns.str.lower()
 
-    if tp1_execution_csv is not None:
-        tp1_data = _tp1_execution_frame(tp1_execution_csv)
-        plotted_n_particles.update(tp1_data["n_particles"].astype(float))
-        errorbar(
-            axis,
-            tp1_data["n_particles"],
-            tp1_data["mean_time_ms"],
-            tp1_data["std_time_ms"],
-            label="TP1",
-            color="#444444",
-            marker="s",
-            linestyle="--",
-        )
-    else:
-        bundle.warnings.append(
-            "La figura de tiempos muestra solo TP2: pasá --tp1-execution-csv para agregar la "
-            "comparación con TP1 que pide el punto (g) del enunciado."
-        )
+    # Map step column if named differently in dataframe schema
+    if "step" not in df.columns and "n_steps" in df.columns:
+        df["step"] = df["n_steps"]
 
-    axis.set_xlabel("Número de partículas N")
-    axis.set_ylabel("Tiempo medio por paso (ms)")
-    # axis.grid(True, alpha=0.28)
-    axis.legend(fontsize=8)
-    axis.set_title("Tiempo de ejecución del CIM")
-    if len(plotted_n_particles) > 1:
-        axis.set_xscale("log")
-        axis.set_yscale("log")
-    figure.tight_layout()
-    return [save_figure(figure, output_dir, "tiempos_ejecucion_cim", image_format, dpi)]
+    # Filter for L=50 and N in (400, 1000)
+    box_col = next((col for col in ["box_length", "l", "length"] if col in df.columns), None)
+    n_col = next((col for col in ["n_particles", "n"] if col in df.columns), None)
+
+    if box_col is not None:
+        df = df[np.isclose(df[box_col], 50.0)]
+
+    if n_col is not None:
+        df = df[df[n_col].isin([400, 1000])]
+
+    if df.empty:
+        return []
+
+    output_files: list[Path] = []
+
+    # Generate separate graphs for Standard and Voter models
+    for model_key in ["standard", "voter"]:
+        model_df = df[df["model"].str.lower() == model_key]
+        if not model_df.empty:
+            saved_file = _plot_model_timings(
+                model_name=model_key,
+                df_model=model_df,
+                output_dir=output_dir,
+                image_format=image_format,
+                dpi=dpi,
+            )
+            output_files.append(saved_file)
+
+    return output_files
