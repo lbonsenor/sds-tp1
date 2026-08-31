@@ -3,7 +3,7 @@
 --length=10
 --contour
 --delta-t=1
---cut-off=1.0
+--cut-off=0.5
 -m=7
 --eta=2.5
 --entire-t=300
