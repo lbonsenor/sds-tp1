@@ -12,7 +12,13 @@ from .telemetry import TelemetryBundle
 
 
 def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: int) -> list[Path]:
-    densities = sorted(bundle.steady_summary["density"].unique())
+    # Filtrar densidades excluyendo rho=0.4 y rho=0.16
+    raw_densities = bundle.steady_summary["density"].unique()
+    densities = sorted(
+        d for d in raw_densities 
+        if not (np.isclose(d, 0.4) or np.isclose(d, 0.16))
+    )
+
     figure, axes = plt.subplots(
         1, len(densities), figsize=(5.2 * len(densities), 4.4), sharey=True, squeeze=False
     )
@@ -49,7 +55,7 @@ def generate(bundle: TelemetryBundle, output_dir: Path, image_format: str, dpi: 
 
     axes.flat[0].set_ylabel("Fracción gigante estacionaria media S")
     axes.flat[0].set_ylim(-0.04, 1.04)
-    figure.suptitle("Componente gigante estacionaria en función del ruido", y=1.03)
+    # figure.suptitle("Componente gigante estacionaria en función del ruido", y=1.03)
     figure.tight_layout()
     
     return [save_figure(figure, output_dir, "cluster_ratio_vs_eta", image_format, dpi)]

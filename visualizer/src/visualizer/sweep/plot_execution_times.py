@@ -69,7 +69,7 @@ def _plot_model_timings(
 
     axis.set_xlabel("Paso (step)")
     axis.set_ylabel("Tiempo de ejecución (ms)")
-    axis.set_title(f"Tiempo de ejecución del CIM por paso ({model_name.capitalize()})")
+    # axis.set_title(f"Tiempo de ejecución del CIM por paso ({model_name.capitalize()})")
     axis.legend(fontsize=8, loc="upper right")
     figure.tight_layout()
 

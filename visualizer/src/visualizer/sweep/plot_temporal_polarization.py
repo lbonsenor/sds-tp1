@@ -77,9 +77,9 @@ def generate(
             set_fraction_axis(axis, "Polarización va")
             axis.legend(fontsize=8)
 
-        figure.suptitle(
-            f"Evolución temporal de la polarización ($\\rho={number_label(density)}$)", y=1.03
-        )
+        # figure.suptitle(
+        #     f"Evolución temporal de la polarización ($\\rho={number_label(density)}$)", y=1.03
+        # )
         figure.tight_layout()
         created.append(
             save_figure(

@@ -88,10 +88,10 @@ def generate(
             set_fraction_axis(axis, "Fracción gigante S")
             axis.legend(loc="best")
 
-        figure.suptitle(
-            f"Evolución temporal de $S$ ($\\rho={number_label(density)}$)",
-            y=1.03,
-        )
+        # figure.suptitle(
+        #     f"Evolución temporal de $S$ ($\\rho={number_label(density)}$)",
+        #     y=1.03,
+        # )
         figure.tight_layout()
         
         created.append(
