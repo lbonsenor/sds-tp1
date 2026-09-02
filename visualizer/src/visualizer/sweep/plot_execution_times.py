@@ -64,7 +64,7 @@ def _plot_model_timings(
                 color=color,
                 linestyle="--",
                 linewidth=1.2,
-                label=f"Promedio Paso 0 ($\\rho$={number_label(density_float)})",
+                label=f"Promedio TP1 ($\\rho$={number_label(density_float)})",
             )
 
     axis.set_xlabel("Paso (step)")
