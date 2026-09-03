@@ -1,7 +1,6 @@
 out/*
 telemetry/*
 figuresNoContour/*
-*.png
 *.csv
 *.gif
 

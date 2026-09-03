@@ -61,7 +61,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
-        help=f"Directorio destino de las figuras (por defecto: {DEFAULT_OUTPUT_DIR}).",
+        help=f"Directorio destino base de las figuras (por defecto: {DEFAULT_OUTPUT_DIR}).",
     )
     parser.add_argument(
         "--steady-state-fraction",
@@ -72,7 +72,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--characteristic-etas",
         type=_parse_eta_values,
-        default=[0.0, 3.0, 6.0],
+        default=[0.0, 0.5, 1.0, 3.0, 6.0],
         help="Etas a mostrar en las evoluciones temporales; usa el valor disponible más cercano.",
     )
     parser.add_argument(
@@ -102,26 +102,32 @@ def main(argv: Sequence[str] | None = None) -> None:
     bundle = load_telemetry(args.telemetry_dir, args.steady_state_fraction)
 
     created_files: list[Path] = []
+    
+    # Cada grupo de figuras se redirige a su propio subdirectorio dentro de output_dir
     created_files += plot_temporal_polarization.generate(
-        bundle, args.output_dir, args.characteristic_etas, args.format, args.dpi
+        bundle, args.output_dir / "temporal_polarization", args.characteristic_etas, args.format, args.dpi
     )
-    created_files += plot_polarization_vs_eta.generate(bundle, args.output_dir, args.format, args.dpi)
+    created_files += plot_polarization_vs_eta.generate(
+        bundle, args.output_dir / "polarization_vs_eta", args.format, args.dpi
+    )
     created_files += plot_temporal_cluster_ratio.generate(
-        bundle, args.output_dir, args.characteristic_etas, args.format, args.dpi
+        bundle, args.output_dir / "temporal_cluster_ratio", args.characteristic_etas, args.format, args.dpi
     )
-    created_files += plot_cluster_ratio_vs_eta.generate(bundle, args.output_dir, args.format, args.dpi)
+    created_files += plot_cluster_ratio_vs_eta.generate(
+        bundle, args.output_dir / "cluster_ratio_vs_eta", args.format, args.dpi
+    )
     created_files += plot_polarization_vs_cluster_ratio.generate(
-        bundle, args.output_dir, args.format, args.dpi
+        bundle, args.output_dir / "polarization_vs_cluster_ratio", args.format, args.dpi
     )
     created_files += plot_execution_times.generate(
-        bundle, args.output_dir, args.format, args.dpi, args.tp1_execution_csv
+        bundle, args.output_dir / "execution_times", args.format, args.dpi, args.tp1_execution_csv
     )
 
     for warning in bundle.warnings:
         print(f"Advertencia: {warning}")
-    print(f"Se generaron {len(created_files)} figuras en {args.output_dir}:")
+    print(f"Se generaron {len(created_files)} figuras estructuradas en subdirectorios dentro de {args.output_dir}:")
     for path in created_files:
-        print(f"- {path.name}")
+        print(f"- {path.relative_to(args.output_dir)}")
 
 
 if __name__ == "__main__":
