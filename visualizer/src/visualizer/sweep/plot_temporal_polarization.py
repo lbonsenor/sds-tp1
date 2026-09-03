@@ -1,8 +1,7 @@
 """Figure (b): characteristic evolución temporal de la polarización.
 
 One file per density, with a panel per characteristic eta, comparing the
-Estándar and Votante models in the same axes and marking the median start of
-the steady-state window used for figures (c) and (e).
+Estándar and Votante models in the same axes.
 """
 
 from __future__ import annotations
@@ -47,7 +46,6 @@ def generate(
 
         for axis, eta in zip(axes.flat, etas):
             panel = density_data.loc[np.isclose(density_data["eta"], eta)]
-            starts: list[float] = []
             for model in ordered_models(panel["model"]):
                 curve = panel.loc[panel["model"] == model]
                 style = model_style(model)
@@ -61,25 +59,11 @@ def generate(
                         color=style["color"],
                         alpha=0.16,
                     )
-                start = bundle.temporal_start(model, density, eta)
-                if start is not None:
-                    starts.append(start)
 
-            if starts:
-                axis.axvline(
-                    float(np.median(starts)),
-                    color="black",
-                    linestyle=":",
-                    linewidth=1.3,
-                    label="Inicio estacionario",
-                )
             axis.set_title(f"$\\eta={number_label(eta)}$")
             set_fraction_axis(axis, "Polarización va")
             axis.legend(fontsize=8)
 
-        # figure.suptitle(
-        #     f"Evolución temporal de la polarización ($\\rho={number_label(density)}$)", y=1.03
-        # )
         figure.tight_layout()
         created.append(
             save_figure(

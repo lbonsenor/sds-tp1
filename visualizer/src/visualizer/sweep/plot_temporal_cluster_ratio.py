@@ -72,26 +72,11 @@ def generate(
                         color=style["color"],
                         alpha=0.16,
                     )
-                
-                # Línea vertical del inicio del estado estacionario
-                start = bundle.temporal_start(model, density, eta)
-                if start is not None:
-                    axis.axvline(
-                        start, 
-                        color=style["color"], 
-                        linestyle=":", 
-                        linewidth=1.3,
-                        alpha=0.85
-                    )
 
             axis.set_title(f"$\\eta={number_label(eta)}$")
             set_fraction_axis(axis, "Fracción gigante S")
             axis.legend(loc="best")
 
-        # figure.suptitle(
-        #     f"Evolución temporal de $S$ ($\\rho={number_label(density)}$)",
-        #     y=1.03,
-        # )
         figure.tight_layout()
         
         created.append(
