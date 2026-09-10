@@ -13,9 +13,10 @@ public class NewParticle {
     private final float r;
     private int collisionCount;
     private final float epsilon;
+    private boolean hasGoal;
 
-    public NewParticle(float x, float y, float vx, float vy, float m, float r, int collisionCount,float epsilon) {
-        this(nextId++, x, y, vx,vy,m,r, collisionCount,epsilon);
+    public NewParticle(float x, float y, float vx, float vy, float m, float r, float epsilon) {
+        this(nextId++, x, y, vx,vy,m,r, 0,epsilon);
     }
 
     public NewParticle(int id, float x, float y, float vx, float vy, float m, float r, int collisionCount,float epsilon) {
@@ -31,65 +32,68 @@ public class NewParticle {
         this.r = r;
         this.collisionCount = collisionCount;
         this.epsilon = epsilon;
+        this.hasGoal = false;
     }
 
     // --- Collisions ---
 
-    // Hola, FLi desde la empresa.
-    // En resumen tenemos una caja de W x L,
-    // y el algoritmo predice el delta t que tiene que pasar para q la particula colisione con:
-    // 1. Con la pared vertical. TODO: evaluar el caso especial, collision con "arco de gol".
-    // 2. con la pared horizontal.
-    // 3. Con otra particula
+    // Caja de W vertical x L horizontal
+    public float collidesX(float L, float Dmin, float Dmax){
 
-    //  TODO: evaluar el caso especial, collision con "arco de gol".
-    public float collidesX(float W, float D){
-
-
-        //DOC ORIGINAL: If the particle never collides with a vertical wall, return a negative
-        //number (or +infinity = DOUBLE_MAX or NaN???)
-
-        // vx = 0
         if (Float.compare(0.0f,vx)<=epsilon){
             return -1;
         }
-
         collisionCount++;
-        // choque con pared der.
-        if (vx > 0 ){
-            return (W - r - x)/vx;
+
+        //  TODO: evaluar el caso especial, collision con "arco de gol".
+        // dudo de esta impl
+        if (y+r >= Dmin && y+r <=Dmax){
+            this.hasGoal = true;
         }
 
-        // choque con pared izq.
+        if (vx > 0 ){
+            return (L - r - x)/vx;
+        }
         return (r-x)/vx;
     }
 
-    public float collidesY(float L){
+    public float collidesY(float W){
 
-        // vy = 0
         if (Float.compare(0.0f,vy)<=epsilon){
             return -1;
         }
 
         collisionCount++;
-
-        // choque con pared arriba.
         if (vy > 0){
-            return (L - r - y)/vy;
+            return (W - r - y)/vy;
         }
-
-        // choque con pared abajo.
         return (r-y)/vy;
     }
 
 
-    // Esto esta dificil, porque tenes q considerar tmb q la otra particula tmb
-    // puede rebotar, y cambiar de direccion?
-    // TODO: preguntar en la clase consulta
     public float collidesWithParticle(NewParticle p){
+
+        if (this ==p) return -1;
+
+        float dx = p.x - this.x;
+        float dy = p.y - this.y;
+        float dvx = p.vx - this.vx;
+        float dvy = p.vy - this.vy;
+        float drdr = dx*dx + dy*dy;
+        float dvdv = dvx * dvx + dvy * dvy;
+        float dvdr = dvx*dx + dvy*dy;
+        float sigma = this.r + p.r;
+        float d = (dvdr * dvdr) - dvdv * (drdr - sigma * sigma);
+
+        if (dvdr >= 0 || d <0 ){
+            return -1;
+        }
+
         collisionCount++;
-        return 0;
+        return (float) (-(dvdr + Math.sqrt(d)) / dvdv);
     }
+
+    // --- Bounce ---
 
     public void bounceX(){
         vx = -vx;
@@ -98,9 +102,11 @@ public class NewParticle {
         vy = -vy;
     }
 
+    public void bounceParticle (NewParticle p){
+
+    }
+
     public int getCollisionCount(){
         return collisionCount;
     }
-
-
 }
