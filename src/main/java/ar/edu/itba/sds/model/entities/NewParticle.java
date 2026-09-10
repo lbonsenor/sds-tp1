@@ -43,7 +43,6 @@ public class NewParticle {
         if (Float.compare(0.0f,vx)<=epsilon){
             return -1;
         }
-        collisionCount++;
 
         //  TODO: evaluar el caso especial, collision con "arco de gol".
         // dudo de esta impl
@@ -63,7 +62,6 @@ public class NewParticle {
             return -1;
         }
 
-        collisionCount++;
         if (vy > 0){
             return (W - r - y)/vy;
         }
@@ -89,21 +87,42 @@ public class NewParticle {
             return -1;
         }
 
-        collisionCount++;
         return (float) (-(dvdr + Math.sqrt(d)) / dvdv);
     }
 
     // --- Bounce ---
 
     public void bounceX(){
+        collisionCount++;
         vx = -vx;
     }
     public void bounceY(){
+        collisionCount++;
         vy = -vy;
     }
 
     public void bounceParticle (NewParticle p){
 
+        float dx = p.x - this.x;
+        float dy = p.y - this.y;
+        float dvx = p.vx - this.vx;
+        float dvy = p.vy - this.vy;
+
+        float dvdr = dvx*dx + dvy*dy;
+        float sigma = this.r + p.r;
+
+
+        float j = 2*this.m*p.m *(dvdr)/(sigma*(this.m+p.m));
+        float jx = j * dx / sigma;
+        float jy = j * dy / sigma;
+
+        this.vx = vx + jx/m;
+        this.vy = vy + jy/m;
+
+        p.vx = p.vx - jx/p.m;
+        p.vy = p.vy - jy/p.m;
+
+        collisionCount++;
     }
 
     public int getCollisionCount(){

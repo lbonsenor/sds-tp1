@@ -2,6 +2,7 @@ package ar.edu.itba.sds.model.entities;
 
 import java.util.Set;
 
+@Deprecated
 public interface Entity2D {
     // Distance calculation
     float euclideanDistance(Entity2D other);

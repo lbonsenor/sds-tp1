@@ -2,6 +2,7 @@ package ar.edu.itba.sds.model.entities;
 
 import java.util.*;
 
+@Deprecated
 public class SizedParticle implements Entity2D {
     private static int nextId = 1;
 
