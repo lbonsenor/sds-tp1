@@ -54,9 +54,48 @@ public class CollisionSystem {
     }
 
     private void reDraw(){
-        MinPQ.add(new Event(t + hz, null,null));
+        MinPQ.add(new Event((float) (t + 1.0 / hz), null,null));
     }
 
+    private void executeMainFlow(){
+        reDraw();
+        while (!MinPQ.isEmpty()) {
+            Event e = MinPQ.poll();
 
+            // 1. VERIFICACIÓN DE VALIDEZ
+            if (e.wasSuperveningEvent()) {
+                continue; // Es un evento viejo/obsoleto, lo salteamos y pasamos al siguiente
+            }
 
+            // 2. AVANZAR EL TIEMPO Y PROCESAR EL EVENTO VÁLIDO
+            float dt = e.getTime() - t;
+
+            // Mover todas las partículas hasta el tiempo e.getTime()
+            for (NewParticle p : particles) {
+                p.move(dt);
+            }
+            t = e.getTime();
+
+            // 3. EXECUTAR EL IMPACTO Y RE-PREDECIR
+            NewParticle a = e.getParticle1();
+            NewParticle b = e.getParticle2();
+
+            if (a != null && b != null) {
+                // Choque entre dos partículas
+                a.bounceParticle(b);
+
+                // aca b == null. Pero lo escribimos explicitamente.
+            } else if (a != null && b == null) {
+                // Choque con pared vertical
+                a.bounceX(Dmin,Dmax);
+            } else if (a == null && b != null) {
+                // Choque con pared horizontal
+                b.bounceY();
+            } else {
+                // Evento de Redraw / Renderizado
+                reDraw();
+            }
+            fillPQ();
+        }
+    }
 }

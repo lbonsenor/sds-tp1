@@ -5,8 +5,8 @@ public class NewParticle {
     private static int nextId = 1;
 
     private final int id;
-    private final float x;
-    private final float y;
+    private float x;
+    private float y;
     private float vx;
     private float vy;
     private final float m;
@@ -125,6 +125,13 @@ public class NewParticle {
         p.vy = p.vy - jy/p.m;
 
         collisionCount++;
+    }
+
+    // --- Move ---
+
+    public void move(float deltaTime) {
+        x = x + vx * deltaTime;
+        y = y + vy * deltaTime;
     }
 
     public int getCollisionCount(){

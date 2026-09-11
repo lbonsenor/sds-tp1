@@ -4,14 +4,11 @@ import ar.edu.itba.sds.model.entities.Entity2D;
 import ar.edu.itba.sds.model.entities.Particle;
 import ar.edu.itba.sds.model.entities.SizedParticle;
 import ar.edu.itba.sds.model.flocking.FlockingStrategy;
-import ar.edu.itba.sds.model.flocking.VicsekStandardStrategy;
-import ar.edu.itba.sds.model.flocking.VoterStrategy;
 import ar.edu.itba.sds.model.telemetry.ClusterDetail;
 import ar.edu.itba.sds.model.telemetry.ExecutionTime;
 import ar.edu.itba.sds.model.telemetry.RunConfig;
 import ar.edu.itba.sds.model.telemetry.TimeObservable;
 import ar.edu.itba.sds.service.CellIndexService;
-import ar.edu.itba.sds.service.OffLatticeService;
 
 import java.time.Duration;
 import java.time.Instant;
