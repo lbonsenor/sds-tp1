@@ -4,22 +4,22 @@ public class NewParticle {
 
     private static int nextId = 1;
 
-    private final int id;
-    private float x;
-    private float y;
-    private float vx;
-    private float vy;
-    private final float m;
-    private final float r;
-    private int collisionCount;
-    private final float epsilon;
-    private boolean hasGoal;
+    protected final int id;
+    protected float x;
+    protected float y;
+    protected float vx;
+    protected float vy;
+    protected final float m;
+    protected final float r;
+    protected int collisionCount;
+    protected final float epsilon;
+    protected boolean hasGoal;
 
     public NewParticle(float x, float y, float vx, float vy, float m, float r, float epsilon) {
         this(nextId++, x, y, vx,vy,m,r, 0,epsilon);
     }
 
-    public NewParticle(int id, float x, float y, float vx, float vy, float m, float r, int collisionCount,float epsilon) {
+    private NewParticle(int id, float x, float y, float vx, float vy, float m, float r, int collisionCount,float epsilon) {
         if (x < 0 || y < 0) {
             throw new IllegalArgumentException("Particle coordinates must be non-negative.");
         }
