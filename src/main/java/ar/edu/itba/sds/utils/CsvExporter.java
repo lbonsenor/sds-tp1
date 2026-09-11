@@ -13,6 +13,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
 
+@Deprecated
 public class CsvExporter {
 
     private static final String TELEMETRY_DIR = "telemetry";

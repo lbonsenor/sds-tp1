@@ -9,6 +9,7 @@ import ar.edu.itba.sds.model.telemetry.TimeObservable;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 public class TelemetryCollector {
 
     private final List<ExecutionTime> executionTimes = new ArrayList<>();

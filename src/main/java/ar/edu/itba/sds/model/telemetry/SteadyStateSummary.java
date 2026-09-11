@@ -5,6 +5,7 @@ import ar.edu.itba.sds.model.flocking.FlockingModelConverter;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 
+@Deprecated
 public class SteadyStateSummary {
 
     @CsvCustomBindByName(column = "model", converter = FlockingModelConverter.class)

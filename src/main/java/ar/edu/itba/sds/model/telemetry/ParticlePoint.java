@@ -2,6 +2,7 @@ package ar.edu.itba.sds.model.telemetry;
 
 import com.opencsv.bean.CsvBindByName;
 
+@Deprecated
 public class ParticlePoint {
 
     @CsvBindByName(column = "run_id")

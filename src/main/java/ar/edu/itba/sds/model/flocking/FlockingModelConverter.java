@@ -4,6 +4,7 @@ import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
+@Deprecated
 public class FlockingModelConverter extends AbstractBeanField<FlockingModel, String> {
 
     @Override

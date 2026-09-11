@@ -7,6 +7,7 @@ import ar.edu.itba.sds.model.telemetry.ParticlePoint;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Deprecated
 public class ParticleStateExporter {
 
     public List<ParticlePoint> extractPoints(String runId, float t, Collection<? extends Entity2D> particles) {

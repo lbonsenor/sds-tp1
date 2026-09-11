@@ -5,6 +5,7 @@ import ar.edu.itba.sds.model.flocking.FlockingStrategy;
 
 import java.util.*;
 
+@Deprecated
 public class OffLatticeService {
 
     public OffLatticeService() {

@@ -5,6 +5,7 @@ import ar.edu.itba.sds.model.flocking.FlockingModelConverter;
 import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 
+@Deprecated
 public class RunConfig {
 
     @CsvBindByName(column = "run_id")

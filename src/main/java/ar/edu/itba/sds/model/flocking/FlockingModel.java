@@ -1,5 +1,6 @@
 package ar.edu.itba.sds.model.flocking;
 
+@Deprecated
 public enum FlockingModel {
     STANDARD,
     VOTER;

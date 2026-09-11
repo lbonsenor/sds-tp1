@@ -4,6 +4,7 @@ import ar.edu.itba.sds.model.entities.Entity2D;
 
 import java.util.Random;
 
+@Deprecated
 public class VicsekStandardStrategy implements FlockingStrategy {
     @Override
     public float computeNewAngle(Entity2D particle, float eta, Random random) {

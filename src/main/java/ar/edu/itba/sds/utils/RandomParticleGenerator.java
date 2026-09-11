@@ -4,6 +4,7 @@ import ar.edu.itba.sds.model.entities.Entity2D;
 
 import java.util.*;
 
+@Deprecated
 public class RandomParticleGenerator {
 
     private static final int MAX_ATTEMPTS_PER_PARTICLE = 10_000;

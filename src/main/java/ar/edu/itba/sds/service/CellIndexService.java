@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Deprecated
 public class CellIndexService<T extends Entity2D> {
 
     private final int M;

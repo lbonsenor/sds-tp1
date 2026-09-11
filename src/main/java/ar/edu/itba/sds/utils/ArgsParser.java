@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
+@Deprecated
 @CommandLine.Command(
         name = "sds-simulation",
         mixinStandardHelpOptions = true,

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+@Deprecated
 public class VoterStrategy implements FlockingStrategy {
     @Override
     public float computeNewAngle(Entity2D particle, float eta, Random random) {
