@@ -38,16 +38,10 @@ public class NewParticle {
     // --- Collisions ---
 
     // Caja de W vertical x L horizontal
-    public float collidesX(float L, float Dmin, float Dmax){
+    public float collidesX(float L){
 
         if (Float.compare(0.0f,vx)<=epsilon){
             return -1;
-        }
-
-        //  TODO: evaluar el caso especial, collision con "arco de gol".
-        // dudo de esta impl
-        if (y+r >= Dmin && y+r <=Dmax){
-            this.hasGoal = true;
         }
 
         if (vx > 0 ){
@@ -92,10 +86,18 @@ public class NewParticle {
 
     // --- Bounce ---
 
-    public void bounceX(){
+    public void bounceX(float Dmin, float Dmax){
+
+        // TODO: evaluar el caso especial, collision con "arco de gol".
+        // dudo de esta impl
+        if (y+r >= Dmin && y+r <=Dmax){
+            this.hasGoal = true;
+        }
+
         collisionCount++;
         vx = -vx;
     }
+
     public void bounceY(){
         collisionCount++;
         vy = -vy;

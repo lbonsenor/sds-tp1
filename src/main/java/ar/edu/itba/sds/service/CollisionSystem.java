@@ -9,7 +9,7 @@ import java.util.PriorityQueue;
 public class CollisionSystem {
 
     private final PriorityQueue<Event> MinPQ;
-    private final List<NewParticle> particles;
+    private final NewParticle[] particles;
     private float t;
     private final float W;
     private final float L;
@@ -18,7 +18,7 @@ public class CollisionSystem {
     private final float hz;
 
 
-    public CollisionSystem(List<NewParticle> particles, float W, float L, float D, float hz){
+    public CollisionSystem(NewParticle[] particles, float W, float L, float D, float hz){
         this.MinPQ = new PriorityQueue<>();
         this.particles = particles;
         this.W = W;
@@ -31,24 +31,23 @@ public class CollisionSystem {
 
     private void fillPQ(){
 
-        for (NewParticle p : particles){
+        for (int i =  0; i < particles.length; i ++){
 
-            float dtX = p.collidesX(L,Dmin,Dmax);
-            float dtY = p.collidesY(W);
+            float dtX = particles[i].collidesX(L);
+            float dtY = particles[i].collidesY(W);
 
             if (dtX>0){
-                MinPQ.add(new Event(dtX+t,p,null));
+                MinPQ.add(new Event(dtX+t,particles[i],null));
             }
             if (dtY > 0 ){
-                MinPQ.add(new Event(dtY+t, null,p));
+                MinPQ.add(new Event(dtY+t, null,particles[i]));
             }
 
-            // TODO: aca habria que ver como mejorar la eficiencia.
-            // TODO: Las particulas que ya fueron calculadas entre si no deberian visitarse de nuevo.
-            for (NewParticle p2 : particles){
-                float dtP = p.collidesWithParticle(p2);
+            // Las particulas que ya fueron calculadas entre si no deberian visitarse de nuevo.
+            for (int j = i+1; j < particles.length; j ++){
+                float dtP = particles[i].collidesWithParticle(particles[j]);
                 if (dtP >0){
-                    MinPQ.add(new Event(dtP,p,p2));
+                    MinPQ.add(new Event(dtP,particles[i],particles[j]));
                 }
             }
         }
