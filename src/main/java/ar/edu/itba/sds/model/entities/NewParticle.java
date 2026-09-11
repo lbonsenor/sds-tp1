@@ -77,7 +77,27 @@ public class NewParticle {
         float sigma = this.r + p.r;
         float d = (dvdr * dvdr) - dvdv * (drdr - sigma * sigma);
 
-        if (dvdr >= 0 || d <0 ){
+        if (dvdr >= 0 || d <0|| dvdv==0 ){
+            return -1;
+        }
+
+        return (float) (-(dvdr + Math.sqrt(d)) / dvdv);
+    }
+
+
+    public float collidesWithObstacle(Obstacle o){
+
+        float dx = o.getX() - this.x;
+        float dy = o.getY() - this.y;
+        float dvx = 0 - this.vx;
+        float dvy = 0 - this.vy;
+        float drdr = dx*dx + dy*dy;
+        float dvdv = dvx * dvx + dvy * dvy;
+        float dvdr = dvx*dx + dvy*dy;
+        float sigma = this.r + o.getR();
+        float d = (dvdr * dvdr) - dvdv * (drdr - sigma * sigma);
+
+        if (dvdr >= 0 || d <0 || dvdv==0 ){
             return -1;
         }
 
@@ -125,6 +145,31 @@ public class NewParticle {
         p.vy = p.vy - jy/p.m;
 
         collisionCount++;
+    }
+
+    // TODO: chequear esto con el de la diapo... no me fije si hacen lo mismo.
+    public void bounceObstacle(Obstacle o) {
+        // 1. Calcular el ángulo alpha del vector normal al choque
+        float dx = o.getX() - this.x;
+        float dy = o.getY() - this.y;
+        float alpha = (float) Math.atan2(dy, dx); // Ángulo entre la normal y el eje X
+
+        float cos = (float) Math.cos(alpha);
+        float sin = (float) Math.sin(alpha);
+
+        // 2. Proyectar la velocidad en componentes normal y tangencial
+        float vn =  this.vx * cos + this.vy * sin;
+        float vt = -this.vx * sin + this.vy * cos;
+
+        // 3. Invierte la componente normal (choque elástico cn = 1) y mantiene la tangencial
+        vn = -vn;
+
+        // 4. Rotar de vuelta a coordenadas cartesianas (X, Y)
+        this.vx = vn * cos - vt * sin;
+        this.vy = vn * sin + vt * cos;
+
+        // 5. Incrementar el contador de colisiones de la partícula móvil
+        this.collisionCount++;
     }
 
     // --- Move ---
