@@ -7,6 +7,7 @@ public class Event implements Comparable<Event>{
     private final NewParticle b;
     private final int countA;
     private final int countB;
+    private final Obstacle o;
 
 
     public Event(float t, NewParticle a, NewParticle b){
@@ -15,6 +16,16 @@ public class Event implements Comparable<Event>{
         this.b = b;
         this.countA = (a != null) ? a.getCollisionCount() : -1;
         this.countB = (b != null) ? b.getCollisionCount() : -1;
+        this.o = null;
+    }
+
+    public Event(float t, NewParticle a, Obstacle o){
+        this.t = t;
+        this.a = a;
+        this.b = null;
+        this.o = o;
+        this.countA = (a != null) ? a.getCollisionCount() : -1;
+        this.countB = -1;
     }
 
     public float getTime() {
@@ -27,6 +38,10 @@ public class Event implements Comparable<Event>{
 
     public NewParticle getParticle2(){
         return b;
+    }
+
+    public Obstacle getO() {
+        return o;
     }
 
     public boolean wasSuperveningEvent() {
